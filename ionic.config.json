@@ -1,0 +1,7 @@
+{
+  "name": "MoneyUp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
