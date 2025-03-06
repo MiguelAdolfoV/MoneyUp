@@ -1,0 +1,29 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Inicio de sesión</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <form (ngSubmit)="onSubmit()">
+    <div class="logo-container">
+      <img src="assets/images/logo.jpg" alt="Logo" class="logo" />
+    </div>
+    <ion-item>
+      <ion-label position="floating">Email</ion-label>
+      <ion-input type="email" [(ngModel)]="email" name="email" required></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="floating">Contraseña</ion-label>
+      <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
+    </ion-item>
+
+    <ion-button expand="full" type="submit">Iniciar sesión</ion-button>
+  </form>
+
+  <div class="ion-text-center">
+    <p>¿No tienes cuenta? <a (click)="goToRegister()">Regístrate</a></p>
+  </div>
+</ion-content>
