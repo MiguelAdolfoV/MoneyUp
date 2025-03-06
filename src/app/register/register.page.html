@@ -1,0 +1,46 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Registro</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <ion-item [class.invalid]="username?.invalid && (username?.dirty || username?.touched)">
+      <ion-label position="floating">Nombre de usuario</ion-label>
+      <ion-input formControlName="username" type="text" required></ion-input>
+    </ion-item>
+    <ion-text *ngIf="username?.invalid && (username?.dirty || username?.touched)" color="danger">
+      <p *ngIf="username?.hasError('required')">El nombre de usuario es requerido.</p>
+    </ion-text>
+
+    <ion-item [class.invalid]="email?.invalid && (email?.dirty || email?.touched)">
+      <ion-label position="floating">Correo electrónico</ion-label>
+      <ion-input formControlName="email" type="email" required></ion-input>
+    </ion-item>
+    <ion-text *ngIf="email?.invalid && (email?.dirty || email?.touched)" color="danger">
+      <p *ngIf="email?.hasError('required')">El email es requerido.</p>
+      <p *ngIf="email?.hasError('email')">El email debe ser válido.</p>
+    </ion-text>
+
+    <ion-item [class.invalid]="password?.invalid && (password?.dirty || password?.touched)">
+      <ion-label position="floating">Contraseña</ion-label>
+      <ion-input formControlName="password" type="password" required></ion-input>
+    </ion-item>
+    <ion-text *ngIf="password?.invalid && (password?.dirty || password?.touched)" color="danger">
+      <p *ngIf="password?.hasError('required')">La contraseña es requerida.</p>
+      <p *ngIf="password?.hasError('minlength')">La contraseña debe tener al menos 6 caracteres.</p>
+      <p *ngIf="password?.hasError('pattern')">La contraseña debe contener al menos una letra mayúscula, una minúscula, un número y un carácter especial.</p>
+    </ion-text>
+
+    <ion-button expand="full" type="submit" [disabled]="registerForm.invalid">Registrarse</ion-button>
+  </form>
+
+  <ion-footer>
+    <ion-toolbar>
+      <ion-buttons slot="end">
+        <ion-button (click)="goToLogin()">¿Ya tienes cuenta? Inicia sesión</ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-footer>
+</ion-content>

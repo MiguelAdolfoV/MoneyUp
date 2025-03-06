@@ -1,0 +1,161 @@
+ion-header {
+    --background: #f8f8f8; 
+  }
+  
+  ion-toolbar {
+    --background: #ffffff; 
+  }
+  
+  ion-title {
+    color: rgb(0, 0, 0);
+  }
+  
+
+  ion-content {
+    --background: #f0f0f0; 
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    height: 100%; /* Asegura que ocupe todo el alto de la pantalla */
+    padding: 16px;
+  }
+  
+  form {
+    width: 100%;
+    max-width: 500px; /* Limita el ancho máximo del formulario */
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: auto; /* Para asegurar que esté centrado */
+  }
+  
+  /* Form Fields */
+  ion-item {
+    margin-bottom: 20px;
+  }
+  
+  ion-label {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  ion-input {
+    font-size: 14px;
+  }
+  
+  /* Error Messages */
+  ion-text {
+    font-size: 12px;
+    padding-top: 5px;
+  }
+  
+  ion-text p {
+    margin: 0;
+  }
+  
+  .invalid {
+    border: 2px solid #ff3b30; /* Rojo para los campos inválidos */
+  }
+  
+  .invalid ion-input {
+    background-color: #f8d7da; /* Fondo suave de error */
+  }
+  
+  .invalid ion-label {
+    color: #ff3b30;
+  }
+  
+  /* Button Styles */
+  ion-button {
+    --background: #98ff38;
+    --border-radius: 8px;
+    --box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  ion-button:disabled {
+    --background: #cccccc;
+  }
+  
+  ion-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 16px 0;
+  }
+  
+  ion-buttons ion-button {
+    font-size: 14px;
+    color: #ffffff;
+  }
+  
+  /* Remove underline from the "Already have an account?" link */
+  a {
+    text-decoration: none; /* Elimina el subrayado del enlace */
+    color: #ffffff; /* Asegura que el enlace tenga el color correcto */
+    font-weight: 600;
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 576px) {
+    form {
+      padding: 15px;
+    }
+  
+    ion-title {
+      font-size: 18px;
+    }
+  
+    ion-label {
+      font-size: 14px;
+    }
+  
+    ion-button {
+      font-size: 14px;
+      padding: 10px;
+    }
+  
+    ion-input {
+      font-size: 14px;
+    }
+  
+    ion-text p {
+      font-size: 12px;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    /* Estilos para pantallas más grandes que 576px pero más pequeñas que 768px */
+    form {
+      padding: 20px;
+      width: 80%;
+    }
+  
+    ion-title {
+      font-size: 20px;
+    }
+  
+    ion-input {
+      font-size: 16px;
+    }
+  
+    ion-button {
+      font-size: 16px;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    /* Estilos para pantallas grandes (tabletas y desktop) */
+    form {
+      width: 50%;
+    }
+  
+    ion-button {
+      font-size: 18px;
+      padding: 14px;
+    }
+  }
+  
