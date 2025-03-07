@@ -1,0 +1,13 @@
+.card {
+    background-color: #76e750;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px 0;
+    text-align: center;
+  }
+  canvas {
+    width: 80% !important;  /* Asegura que el canvas use el 100% del ancho del contenedor */
+    height: auto !important;  /* Mantiene la proporción de aspecto */
+  }
+    
