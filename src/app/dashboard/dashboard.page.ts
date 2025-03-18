@@ -1,6 +1,7 @@
 import { Component, AfterViewInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
+import Chart from 'chart.js/auto';
 
 interface FinancialEntry {
   tipo: boolean;
@@ -18,20 +19,23 @@ export class DashboardPage implements AfterViewInit {
   totalExpenses: number = 0;
   lastWeekSavings: number = 0;
   consejos: string[] = [];
-  showTips: boolean = false;  // Controla la visibilidad de los consejos
+  showTips: boolean = false;
+
+  private pieChart: any;
+  private barChart: any;
 
   constructor(private http: HttpClient, private router: Router) {}
 
   ngAfterViewInit() {
     this.loadData();
-    this.loadFinancialTips(); // Carga los consejos al iniciar
+    this.loadFinancialTips();
   }
 
   loadData() {
-    const token = localStorage.getItem('authToken');  
+    const token = localStorage.getItem('authToken');
     if (!token) {
       console.error('No se encontró el token en el almacenamiento local.');
-      this.router.navigate(['/login']);  
+      this.router.navigate(['/login']);
       return;
     }
 
@@ -63,6 +67,9 @@ export class DashboardPage implements AfterViewInit {
         this.totalSavings = totalIncomes - totalExpenditures;
         this.totalExpenses = totalExpenditures;
         this.lastWeekSavings = lastWeekIncomes - totalExpenditures;
+
+        this.createPieChart(totalIncomes, totalExpenditures);
+        this.createBarChart(data);
       },
       error => {
         console.error('Error al cargar los datos de ingresos:', error);
@@ -73,6 +80,57 @@ export class DashboardPage implements AfterViewInit {
     );
   }
 
+  createPieChart(income: number, expenses: number) {
+    const ctx = document.getElementById('pieChart') as HTMLCanvasElement;
+    if (this.pieChart) {
+      this.pieChart.destroy();
+    }
+    this.pieChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Ingresos', 'Gastos'],
+        datasets: [{
+          data: [income, expenses],
+          backgroundColor: [this.getRandomColor(), this.getRandomColor()],
+        }]
+      },
+      options: {
+        responsive: true
+      }
+    });
+  }
+
+  createBarChart(data: FinancialEntry[]) {
+    const ctx = document.getElementById('barChart') as HTMLCanvasElement;
+    if (this.barChart) {
+      this.barChart.destroy();
+    }
+  
+    const categories: { [key: string]: number } = {};
+
+    data.forEach(entry => {
+      const key = entry.tipo ? 'Ingresos' : 'Gastos';
+      categories[key] = (categories[key] || 0) + entry.cantidad;
+    });
+
+    this.barChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(categories),
+        datasets: [{
+          label: 'Distribución Financiera',
+          data: Object.values(categories),
+          backgroundColor: Object.keys(categories).map(() => this.getRandomColor()),
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
   loadFinancialTips() {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -117,5 +175,14 @@ export class DashboardPage implements AfterViewInit {
 
   toggleFinancialTips() {
     this.showTips = !this.showTips;
+  }
+
+  getRandomColor(): string {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
   }
 }
