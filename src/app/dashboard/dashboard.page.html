@@ -1,29 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-buttons slot="end">
-      <ion-button (click)="goToForm('ingreso')">
-        <ion-icon name="add-circle"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="goToForm('egreso')">
-        <ion-icon name="remove-circle"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="goToProfile()">
-        <ion-icon name="person-circle"></ion-icon>
-      </ion-button>
-      
-
-      <ion-button (click)="toggleFinancialTips()">
-        <ion-icon name="information-circle"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="goToMetas()">
-        <ion-icon name="star-outline"></ion-icon>
-        Metas
-      </ion-button>
-
-    </ion-buttons>
+    <ion-title>Dashboard</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -42,33 +19,4 @@
     <h2>Ahorro de la semana pasada</h2>
     <p>{{ lastWeekSavings | currency }}</p>
   </div>
-  
-  <div *ngIf="showTips && consejos.length > 0">
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Consejos Financieros</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <ul>
-          <li *ngFor="let consejo of consejos">{{ consejo }}</li>
-        </ul>
-      </ion-card-content>
-    </ion-card>
-  </div>
-  <div *ngIf="showTips && consejos.length === 0">
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Consejos Financieros</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>No hay consejos disponibles en este momento.</p>
-      </ion-card-content>
-    </ion-card>
-  </div>
-  
-  
-
-  <!-- Gráficos de ingresos y egresos -->
-  <canvas id="myPieChart" width="400" height="400" style="margin: auto;"></canvas>
-  <canvas id="myBarChart" width="400" height="400" style="margin: auto;"></canvas>
 </ion-content>
