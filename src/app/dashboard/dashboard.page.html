@@ -1,6 +1,11 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>Dashboard</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleFinancialTips()">
+        <ion-icon name="information-circle"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -18,5 +23,29 @@
   <div class="card">
     <h2>Ahorro de la semana pasada</h2>
     <p>{{ lastWeekSavings | currency }}</p>
+  </div>
+
+  <div *ngIf="showTips && consejos.length > 0">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Consejos Financieros</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ul>
+          <li *ngFor="let consejo of consejos">{{ consejo }}</li>
+        </ul>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div *ngIf="showTips && consejos.length === 0">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Consejos Financieros</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>No hay consejos disponibles en este momento.</p>
+      </ion-card-content>
+    </ion-card>
   </div>
 </ion-content>
