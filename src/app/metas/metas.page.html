@@ -1,0 +1,71 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Mis Metas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  
+  <form (submit)="addMeta()">
+    <ion-item>
+      <ion-label position="floating">Nueva Meta</ion-label>
+      <ion-input [(ngModel)]="newMeta" name="newMeta" required></ion-input>
+    </ion-item>
+
+    <ion-button expand="full" type="submit" style="background-color: #A8E6CF; color: white;">Agregar Meta</ion-button>
+
+  </form>
+
+  <ion-list>
+    <ion-item *ngFor="let meta of metas; let i = index">
+      <ion-label>{{ meta }}</ion-label>
+      <ion-icon name="information-circle" slot="end" (click)="openTip(i)"></ion-icon>
+    </ion-item>
+  </ion-list>
+
+
+<ion-modal [isOpen]="isModalOpen" (ionModalDidDismiss)="closeModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>{{ financialTip.title }}</ion-title>
+
+        <ion-buttons slot="end">
+          <ion-button (click)="closeModal()">
+            <ion-icon name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Consejos para lograr tu meta</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>Aquí tienes algunos pasos para comenzar:</p>
+          <ion-list>
+            <ion-item *ngFor="let step of financialTip.steps">
+              <ion-label>{{ step }}</ion-label>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-button expand="full" color="primary" (click)="closeModal()">Cerrar</ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+
+
+
+</ion-content>
+
+
+
+
+
+
+
