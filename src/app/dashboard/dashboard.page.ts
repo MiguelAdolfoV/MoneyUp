@@ -185,4 +185,17 @@ export class DashboardPage implements AfterViewInit {
     }
     return color;
   }
+
+  goToMetas() {
+    this.router.navigate(['/metas']); 
+  }
+  
+  goToForm(type: string) {
+    this.router.navigate(['/form'], { queryParams: { type } });
+  }
+  
+  goToProfile() {
+    this.router.navigate(['/perfil']);
+  }
+  
 }

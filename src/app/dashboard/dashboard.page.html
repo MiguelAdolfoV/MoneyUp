@@ -2,12 +2,30 @@
   <ion-toolbar>
     <ion-title>Dashboard</ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="goToForm('ingreso')">
+        <ion-icon name="add-circle"></ion-icon>
+      </ion-button>
+
+      <ion-button (click)="goToForm('egreso')">
+        <ion-icon name="remove-circle"></ion-icon>
+      </ion-button>
+
+      <ion-button (click)="goToProfile()">
+        <ion-icon name="person-circle"></ion-icon>
+      </ion-button>
+      
       <ion-button (click)="toggleFinancialTips()">
         <ion-icon name="information-circle"></ion-icon>
+      </ion-button>
+
+      <ion-button (click)="goToMetas()">
+        <ion-icon name="star-outline"></ion-icon>
+        Metas
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
+
 
 <ion-content class="ion-padding">
   <div class="card">
