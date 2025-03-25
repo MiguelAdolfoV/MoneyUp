@@ -6,7 +6,7 @@
 
 <ion-content class="ion-padding">
 
-  
+   <!-- Formulario para agregar una nueva meta -->
   <form (submit)="addMeta()">
     <ion-item>
       <ion-label position="floating">Nueva Meta</ion-label>
@@ -16,7 +16,7 @@
     <ion-button expand="full" type="submit" style="background-color: #A8E6CF; color: white;">Agregar Meta</ion-button>
 
   </form>
-
+  <!-- Lista de metas -->
   <ion-list>
     <ion-item *ngFor="let meta of metas; let i = index">
       <ion-label>{{ meta }}</ion-label>
@@ -24,7 +24,7 @@
     </ion-item>
   </ion-list>
 
-
+  <!-- Modal para mostrar consejos financieros -->
 <ion-modal [isOpen]="isModalOpen" (ionModalDidDismiss)="closeModal()">
   <ng-template>
     <ion-header>
