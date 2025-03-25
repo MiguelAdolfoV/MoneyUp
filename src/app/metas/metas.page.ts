@@ -48,7 +48,21 @@ export class MetasPage {
       ]
     }
   ];
- 
+  financialTip: any = {}; // Consejo seleccionado
+  isModalOpen: boolean = false; // Estado del modal
+
+  constructor(private modalController: ModalController, private toastController: ToastController) {}
+
+  // Función para mostrar un toast
+  async presentToast(message: string, color: string = 'success') {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2000, // Duración en milisegundos
+      position: 'bottom',
+      color: color // 'success', 'danger', 'warning', etc.
+    });
+    await toast.present();
+  }
     
 }
 
