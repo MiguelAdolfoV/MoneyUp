@@ -34,4 +34,27 @@ export class PerfilPage implements OnInit {
       });
     }
   }
+
+   // Función para cambiar la foto del perfil
+   // Esta es solo una implementación simulada
+   changeProfileImage() {
+    this.alertCtrl.create({
+      header: 'Actualizar foto de perfil',
+      message: '¿Quieres cambiar tu foto de perfil?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+        },
+        {
+          text: 'Cambiar Foto',
+          handler: () => {
+            console.log('Foto cambiada');
+            this.userData.photoUrl = 'https://via.placeholder.com/150/0000FF/808080';
+          },
+        },
+      ],
+    }).then(alert => alert.present());
+  }
+
 }
