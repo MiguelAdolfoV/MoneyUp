@@ -48,60 +48,7 @@ export class MetasPage {
       ]
     }
   ];
-  financialTip: any = {}; // Consejo seleccionado
-  isModalOpen: boolean = false; // Estado del modal
-
-  constructor(private modalController: ModalController, private toastController: ToastController) {}
-
-  // Función para mostrar un toast
-  async presentToast(message: string, color: string = 'success') {
-    const toast = await this.toastController.create({
-      message: message,
-      duration: 2000, // Duración en milisegundos
-      position: 'bottom',
-      color: color // 'success', 'danger', 'warning', etc.
-    });
-    await toast.present();
-  }
-
-  // Función para agregar una meta
-  addMeta() {
-    if (this.newMeta.trim()) {
-      // Agregar la meta al arreglo
-      this.metas.push(this.newMeta.trim());
-      this.newMeta = ''; // Limpiar el input
-      // Guardar las metas en localStorage para persistencia
-      localStorage.setItem('metas', JSON.stringify(this.metas));
-
-      // Mostrar mensaje de éxito
-      this.presentToast('Meta creada exitosamente ');
-    } else {
-      this.presentToast('Por favor, ingresa una meta válida', 'warning');
-    }
-  }
-
-  // Función para abrir el modal con el consejo
-  openTip(index: number) {
-    this.financialTip = this.financialTips[Math.floor(Math.random() * this.financialTips.length)];
-    this.isModalOpen = true; // Abrir el modal
-  }
-
-  // Función para cerrar el modal
-  closeModal() {
-    this.isModalOpen = false; // Cerrar el modal
-  }
-
-
-  // Cargar las metas desde localStorage cuando la página se inicializa
-  ionViewDidEnter() {
-    const storedMetas = localStorage.getItem('metas');
-    if (storedMetas) {
-      this.metas = JSON.parse(storedMetas);
-    }
-  }
-
  
-   
     
 }
 
