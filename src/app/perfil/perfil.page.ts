@@ -56,5 +56,30 @@ export class PerfilPage implements OnInit {
       ],
     }).then(alert => alert.present());
   }
+  
+  // Función para actualizar el perfil
+  updateProfile() {
+    const token = this.storage.get('token'); 
 
+    token.then((tkn: string | null) => {
+      if (tkn) {
+        this.http.put('https://rest-api-sigma-five.vercel.app/api/auth/user', {
+          name: this.userData.name,
+          email: this.userData.email,
+          password: this.userData.password,
+        }, {
+          headers: {
+            'Authorization': `Bearer ${tkn}`,
+          }
+        }).subscribe(
+          response => {
+            console.log('Perfil actualizado', response);
+          },
+          error => {
+            console.error('Error al actualizar el perfil', error);
+          }
+        );
+      }
+    });
+  }
 }
