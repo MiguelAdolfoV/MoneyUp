@@ -86,4 +86,18 @@ export class MetasPage {
     this.isModalOpen = true; // Abrir el modal
   }
 
+  // Función para cerrar el modal
+  closeModal() {
+    this.isModalOpen = false; // Cerrar el modal
+  }
+
+
+  // Cargar las metas desde localStorage cuando la página se inicializa
+  ionViewDidEnter() {
+    const storedMetas = localStorage.getItem('metas');
+    if (storedMetas) {
+      this.metas = JSON.parse(storedMetas);
+    }
+  }
+
 }
