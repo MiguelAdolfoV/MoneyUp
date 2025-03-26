@@ -63,12 +63,21 @@ export class MetasPage {
     });
     await toast.present();
   }
-    
+
+   // Función para agregar una meta
+   addMeta() {
+    if (this.newMeta.trim()) {
+      // Agregar la meta al arreglo
+      this.metas.push(this.newMeta.trim());
+      this.newMeta = ''; // Limpiar el input
+      // Guardar las metas en localStorage para persistencia
+      localStorage.setItem('metas', JSON.stringify(this.metas));
+
+      // Mostrar mensaje de éxito
+      this.presentToast('Meta creada exitosamente ');
+    } else {
+      this.presentToast('Por favor, ingresa una meta válida', 'warning');
+    }
+  }
+
 }
-
-
-
-
-
-
-
