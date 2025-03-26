@@ -80,4 +80,10 @@ export class MetasPage {
     }
   }
 
+   // Función para abrir el modal con el consejo
+   openTip(index: number) {
+    this.financialTip = this.financialTips[Math.floor(Math.random() * this.financialTips.length)];
+    this.isModalOpen = true; // Abrir el modal
+  }
+
 }
