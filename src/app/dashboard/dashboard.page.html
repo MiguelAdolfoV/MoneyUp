@@ -1,6 +1,5 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Dashboard</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="goToForm('ingreso')">
         <ion-icon name="add-circle"></ion-icon>
@@ -13,7 +12,7 @@
       <ion-button (click)="goToProfile()">
         <ion-icon name="person-circle"></ion-icon>
       </ion-button>
-      
+
       <ion-button (click)="toggleFinancialTips()">
         <ion-icon name="information-circle"></ion-icon>
       </ion-button>
@@ -26,8 +25,17 @@
   </ion-toolbar>
 </ion-header>
 
-
 <ion-content class="ion-padding">
+
+  <!-- Refresher debe ser el PRIMER elemento dentro de ion-content -->
+  <ion-refresher slot="fixed" (ionRefresh)="refreshData($event)">
+    <ion-refresher-content
+      pullingText="Desliza hacia abajo para actualizar"
+      refreshingSpinner="circles"
+      refreshingText="Actualizando datos...">
+    </ion-refresher-content>
+  </ion-refresher>
+
   <div class="card">
     <h2>Ahorro total</h2>
     <p>{{ totalSavings | currency }}</p>
@@ -55,7 +63,6 @@
       </ion-card-content>
     </ion-card>
   </div>
-
   <div *ngIf="showTips && consejos.length === 0">
     <ion-card>
       <ion-card-header>
@@ -67,23 +74,8 @@
     </ion-card>
   </div>
 
-  <!-- Gráfico de pastel -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Distribución de Ingresos y Gastos</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <canvas id="pieChart"></canvas>
-    </ion-card-content>
-  </ion-card>
+  <!-- Gráficos de ingresos y egresos -->
+  <canvas id="myPieChart" width="400" height="400" style="margin: auto;"></canvas>
+  <canvas id="myBarChart" width="400" height="400" style="margin: auto;"></canvas>
 
-  <!-- Gráfico de barras -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Comparación de Ingresos y Gastos</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <canvas id="barChart"></canvas>
-    </ion-card-content>
-  </ion-card>
 </ion-content>
