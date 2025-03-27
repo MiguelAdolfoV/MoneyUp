@@ -28,17 +28,19 @@ export class FormPage implements OnInit {
     });
   }
 
-
+  // Método para manejar el envío del formulario
   onSubmit() {
     const token = localStorage.getItem('authToken');  
 
     if (!token) {
       console.error('No se encontró el token en el almacenamiento local.');
 
+      // Redirigir al login si no hay token
       this.router.navigate(['/login']);
       return;
     }
 
+    // Preparar los datos de la transacción
     const transactionData = {
       usuario: 'cliente2',   
       tipo: this.type,      
@@ -46,23 +48,31 @@ export class FormPage implements OnInit {
       descripcion: this.description  
     };
 
+    // Establecer los encabezados de la solicitud con el token
     const headers = new HttpHeaders({
       'x-access-token': token 
     });
 
-
+    // URL de la API
     const apiUrl = 'https://rest-api-sigma-five.vercel.app/api/ingreso/';
-    
 
+    // Realizar la solicitud POST
     this.http.post(apiUrl, transactionData, { headers }).subscribe(
       (response) => {
+        // Respuesta exitosa
         console.log(`${this.type ? 'Ingreso' : 'Egreso'} registrado`, response);
         
+        // Mostrar mensaje de éxito
         alert(`${this.type ? 'Ingreso' : 'Egreso'} registrado con éxito.`);
+        
+        // Redirigir al dashboard
         this.router.navigate(['/dashboard']);  
       },
       (error) => {
+        // Manejo de errores
         console.error('Error al registrar transacción', error);
+        
+        // Mostrar mensaje de error
         alert('Ocurrió un error al registrar la transacción.');
       }
     );
