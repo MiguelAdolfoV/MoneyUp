@@ -6,6 +6,7 @@ import { Router, ActivatedRoute } from '@angular/router';
   selector: 'app-form',
   templateUrl: './form.page.html',
   styleUrls: ['./form.page.scss'],
+  standalone : false
 })
 export class FormPage implements OnInit {
   description: string = ''; 
