@@ -14,7 +14,6 @@
           <img src="assets/images/logo.png" alt="Logo" class="logo" />
         </div>
 
-        <!-- Correo -->
         <ion-item lines="none">
           <ion-label position="stacked">Correo electrónico</ion-label>
           <ion-input
@@ -22,10 +21,12 @@
             [(ngModel)]="email"
             name="email"
             required
+            (ionInput)="onInputSanitize('email')"
+            (keydown)="preventSpace($event)"
           ></ion-input>
         </ion-item>
-
-        <!-- Contraseña con toggle -->
+        
+        <!-- Contraseña -->
         <ion-item class="input-password">
           <ion-label position="stacked">Contraseña</ion-label>
           <ion-input
@@ -33,9 +34,10 @@
             [(ngModel)]="password"
             name="password"
             required
+            (ionInput)="onInputSanitize('password')"
+            (keydown)="preventSpace($event)"
           ></ion-input>
         
-          <!-- Ícono flotante (no empuja el input) -->
           <ion-icon
             [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
             class="toggle-eye-icon"
