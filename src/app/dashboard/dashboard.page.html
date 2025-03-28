@@ -1,81 +1,117 @@
 <ion-header>
   <ion-toolbar>
+    <ion-title>MoneyUp</ion-title>
+    
     <ion-buttons slot="end">
-      <ion-button (click)="goToForm('ingreso')">
-        <ion-icon name="add-circle"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="goToForm('egreso')">
-        <ion-icon name="remove-circle"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="goToProfile()">
-        <ion-icon name="person-circle"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="toggleFinancialTips()">
-        <ion-icon name="information-circle"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="goToMetas()">
-        <ion-icon name="star-outline"></ion-icon>
-        Metas
+      <ion-button color="danger" (click)="logout()">
+        <ion-icon name="log-out-outline" slot="start"></ion-icon>
+        Cerrar sesión
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+  <ion-content class="ion-padding">
 
-  <!-- Refresher debe ser el PRIMER elemento dentro de ion-content -->
   <ion-refresher slot="fixed" (ionRefresh)="refreshData($event)">
     <ion-refresher-content
-      pullingText="Desliza hacia abajo para actualizar"
-      refreshingSpinner="circles"
-      refreshingText="Actualizando datos...">
+      pullingText="Desliza para actualizar"
+      refreshingSpinner="crescent"
+      refreshingText="Actualizando...">
     </ion-refresher-content>
   </ion-refresher>
 
-  <div class="card">
-    <h2>Ahorro total</h2>
-    <p>{{ totalSavings | currency }}</p>
-  </div>
-
-  <div class="card">
-    <h2>Gastos totales</h2>
-    <p>{{ totalExpenses | currency }}</p>
-  </div>
-
-  <div class="card">
-    <h2>Ahorro de la semana pasada</h2>
-    <p>{{ lastWeekSavings | currency }}</p>
-  </div>
-
-  <div *ngIf="showTips && consejos.length > 0">
-    <ion-card>
+  <!-- Estadísticas principales -->
+  <div class="dashboard-grid">
+    <ion-card class="stat-card">
       <ion-card-header>
-        <ion-card-title>Consejos Financieros</ion-card-title>
+        <ion-card-title>Ahorro total</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <ul>
-          <li *ngFor="let consejo of consejos">{{ consejo }}</li>
-        </ul>
+        <p>{{ totalSavings | currency }}</p>
       </ion-card-content>
     </ion-card>
-  </div>
-  <div *ngIf="showTips && consejos.length === 0">
-    <ion-card>
+
+    <ion-card class="stat-card">
       <ion-card-header>
-        <ion-card-title>Consejos Financieros</ion-card-title>
+        <ion-card-title>Gastos totales</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <p>No hay consejos disponibles en este momento.</p>
+        <p>{{ totalExpenses | currency }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="stat-card">
+      <ion-card-header>
+        <ion-card-title>Ahorro semana pasada</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ lastWeekSavings | currency }}</p>
       </ion-card-content>
     </ion-card>
   </div>
 
-  <!-- Gráficos de ingresos y egresos -->
-  <canvas id="myPieChart" width="400" height="400" style="margin: auto;"></canvas>
-  <canvas id="myBarChart" width="400" height="400" style="margin: auto;"></canvas>
+  <!-- Consejos -->
+  <ion-card *ngIf="showTips">
+    <ion-card-header>
+      <ion-card-title>Consejos Financieros</ion-card-title>
+    </ion-card-header>
+    <ion-card-content *ngIf="consejos.length > 0">
+      <ul>
+        <li *ngFor="let consejo of consejos">{{ consejo }}</li>
+      </ul>
+    </ion-card-content>
+    <ion-card-content *ngIf="consejos.length === 0">
+      <p>No hay consejos disponibles en este momento.</p>
+    </ion-card-content>
+  </ion-card>
+<!-- Gráficos -->
+<div class="charts-container">
+  <div class="chart-wrapper">
+    <canvas id="myPieChart"></canvas>
+  </div>
 
+  <div class="chart-wrapper">
+    <canvas id="myBarChart"></canvas>
+  </div>
+</div>
 </ion-content>
+
+<!-- 🔻 Barra inferior personalizada con tu navegación -->
+<div class="dashboard-menu">
+  <a class="link" (click)="goToForm('ingreso')">
+    <span class="link-icon">
+      <ion-icon name="add-circle-outline"></ion-icon>
+    </span>
+    <span class="link-title">Ingreso</span>
+  </a>
+
+  <a class="link" (click)="goToForm('egreso')">
+    <span class="link-icon">
+      <ion-icon name="remove-circle-outline"></ion-icon>
+    </span>
+    <span class="link-title">Egreso</span>
+  </a>
+
+  <a class="link" (click)="goToProfile()">
+    <span class="link-icon">
+      <ion-icon name="person-circle-outline"></ion-icon>
+    </span>
+    <span class="link-title">Perfil</span>
+  </a>
+
+  <a class="link" (click)="toggleFinancialTips()">
+    <span class="link-icon">
+      <ion-icon name="information-circle-outline"></ion-icon>
+    </span>
+    <span class="link-title">Consejos</span>
+  </a>
+
+  <a class="link" (click)="goToMetas()">
+    <span class="link-icon">
+      <ion-icon name="star-outline"></ion-icon>
+    </span>
+    <span class="link-title">Metas</span>
+  </a>
+</div>
+

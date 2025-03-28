@@ -1,40 +1,61 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import Chart from 'chart.js/auto';
+import { Chart, registerables } from 'chart.js';
+import { AuthService } from '../services/auth.service';
+import { AlertController } from '@ionic/angular'; 
 
 interface FinancialEntry {
   tipo: boolean;
   cantidad: number;
   fecha: string;
+  usuario: string;
 }
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
+  standalone: false
 })
-export class DashboardPage implements AfterViewInit {
+export class DashboardPage {
   totalSavings: number = 0;
   totalExpenses: number = 0;
   lastWeekSavings: number = 0;
-  consejos: string[] = [];
   showTips: boolean = false;
+  consejos: string[] = [];
 
-  private pieChart: any;
-  private barChart: any;
+  pieChart: Chart | undefined;
+  barChart: Chart | undefined;
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private alertController: AlertController,
+    private authService: AuthService
+  ) {
+    Chart.register(...registerables);
+  }
 
-  ngAfterViewInit() {
+  ionViewWillEnter() {
     this.loadData();
     this.loadFinancialTips();
   }
 
-  loadData() {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      console.error('No se encontró el token en el almacenamiento local.');
+  refreshData(event: any) {
+    this.loadData();
+
+    setTimeout(() => {
+      event.target.complete();
+    }, 1500);
+  }
+
+  async loadData() {
+    const token = await this.authService.getToken();
+    const user = await this.authService.getUser();
+    const username = user?.username;
+
+    if (!token || !username) {
       this.router.navigate(['/login']);
       return;
     }
@@ -43,36 +64,34 @@ export class DashboardPage implements AfterViewInit {
 
     this.http.get<FinancialEntry[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/', { headers }).subscribe(
       data => {
-        let totalIncomes = 0;
-        let totalExpenditures = 0;
-        let lastWeekIncomes = 0;
+        this.totalSavings = 0;
+        this.totalExpenses = 0;
+        this.lastWeekSavings = 0;
 
-        data.forEach((entry: FinancialEntry) => {
-          if (entry.tipo) {  
-            totalIncomes += entry.cantidad;
-          } else {  
-            totalExpenditures += entry.cantidad;
-          }
+        const today = new Date();
+        const lastWeek = new Date();
+        lastWeek.setDate(today.getDate() - 7);
 
+        // 🔎 Filtrar datos del usuario actual
+        const filteredData = data.filter(entry => entry.usuario === username);
+
+        filteredData.forEach((entry) => {
           const entryDate = new Date(entry.fecha);
-          const today = new Date();
-          const lastWeek = new Date();
-          lastWeek.setDate(today.getDate() - 7);  
-        
-          if (entryDate >= lastWeek) {
-            lastWeekIncomes += entry.cantidad;
+          if (entry.tipo) {
+            this.totalSavings += entry.cantidad;
+            if (entryDate >= lastWeek) {
+              this.lastWeekSavings += entry.cantidad;
+            }
+          } else {
+            this.totalExpenses += entry.cantidad;
           }
         });
 
-        this.totalSavings = totalIncomes - totalExpenditures;
-        this.totalExpenses = totalExpenditures;
-        this.lastWeekSavings = lastWeekIncomes - totalExpenditures;
+        this.lastWeekSavings = this.totalSavings - this.totalExpenses;
 
-        this.createPieChart(totalIncomes, totalExpenditures);
-        this.createBarChart(data);
+        this.renderCharts();
       },
       error => {
-        console.error('Error al cargar los datos de ingresos:', error);
         if (error.status === 401) {
           this.router.navigate(['/login']);
         }
@@ -80,122 +99,136 @@ export class DashboardPage implements AfterViewInit {
     );
   }
 
-  createPieChart(income: number, expenses: number) {
-    const ctx = document.getElementById('pieChart') as HTMLCanvasElement;
-    if (this.pieChart) {
-      this.pieChart.destroy();
-    }
-    this.pieChart = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: ['Ingresos', 'Gastos'],
-        datasets: [{
-          data: [income, expenses],
-          backgroundColor: [this.getRandomColor(), this.getRandomColor()],
-        }]
-      },
-      options: {
-        responsive: true
-      }
-    });
-  }
+  async loadFinancialTips() {
+    const token = await this.authService.getToken();
+    const user = await this.authService.getUser();
+    const username = user?.username;
 
-  createBarChart(data: FinancialEntry[]) {
-    const ctx = document.getElementById('barChart') as HTMLCanvasElement;
-    if (this.barChart) {
-      this.barChart.destroy();
-    }
-  
-    const categories: { [key: string]: number } = {};
-
-    data.forEach(entry => {
-      const key = entry.tipo ? 'Ingresos' : 'Gastos';
-      categories[key] = (categories[key] || 0) + entry.cantidad;
-    });
-
-    this.barChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: Object.keys(categories),
-        datasets: [{
-          label: 'Distribución Financiera',
-          data: Object.values(categories),
-          backgroundColor: Object.keys(categories).map(() => this.getRandomColor()),
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true }
-        }
-      }
-    });
-  }
-  loadFinancialTips() {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      console.error('No se encontró el token en el almacenamiento local.');
+    if (!token || !username) {
       this.router.navigate(['/login']);
       return;
     }
-  
+
     const url = 'https://rest-api-sigma-five.vercel.app/api/ingreso/consejo';
 
     const headers = new HttpHeaders({
       'x-access-token': token,
       'Content-Type': 'application/json'
     });
-  
-    const body = {
-      usuario: 'cliente2' 
-    };
+
+    const body = { usuario: username };
 
     this.http.post(url, body, { headers }).subscribe(
       (response: any) => {
-        console.log('Consejos recibidos:', response);
-
-        if (response && response.consejo) {
+        if (response?.consejo) {
           this.consejos = [response.consejo];
-          console.log('Consejos procesados:', this.consejos);
-        } else if (response && response.consejos && Array.isArray(response.consejos)) {
+        } else if (Array.isArray(response?.consejos)) {
           this.consejos = response.consejos;
-          console.log('Consejos procesados:', this.consejos);
         } else {
-          console.log('No se encontraron consejos en la respuesta.');
           this.consejos = [];
         }
       },
-      (error) => {
-        console.error('Error al obtener los consejos:', error);
-        alert('Hubo un error al cargar los consejos. Por favor, intenta más tarde.');
+      () => {
         this.consejos = [];
       }
     );
   }
 
-  toggleFinancialTips() {
-    this.showTips = !this.showTips;
+  renderCharts() {
+    if (this.pieChart) {
+      this.pieChart.destroy();
+    }
+
+    if (this.barChart) {
+      this.barChart.destroy();
+    }
+
+    const pieCtx = document.getElementById('myPieChart') as HTMLCanvasElement;
+    const barCtx = document.getElementById('myBarChart') as HTMLCanvasElement;
+
+    this.pieChart = new Chart(pieCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Ingresos', 'Gastos'],
+        datasets: [{
+          label: 'Ingresos y Gastos',
+          data: [this.totalSavings, this.totalExpenses],
+          backgroundColor: [this.getRandomColor(), this.getRandomColor()]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+
+    this.barChart = new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Ingresos', 'Egresos'],
+        datasets: [{
+          label: 'Ingresos y Egresos',
+          data: [this.totalSavings, this.totalExpenses],
+          backgroundColor: [this.getRandomColor(), this.getRandomColor()],
+          borderColor: [this.getRandomColor(), this.getRandomColor()],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
   }
 
   getRandomColor(): string {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    const a = (Math.random() * 0.5 + 0.5).toFixed(2);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
   }
 
-  goToMetas() {
-    this.router.navigate(['/metas']); 
+  toggleFinancialTips() {
+    this.showTips = !this.showTips;
   }
+  async logout() {
+    const alert = await this.alertController.create({
+      header: 'Cerrar sesión',
+      message: '¿Estás seguro de que quieres cerrar sesión?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Cerrar sesión',
+          role: 'destructive',
+          handler: async () => {
+            await this.authService.logout();
+            this.router.navigateByUrl('/login', { replaceUrl: true });
+          }
+        }
+      ]
+    });
   
+    await alert.present();
+  }  
+
   goToForm(type: string) {
     this.router.navigate(['/form'], { queryParams: { type } });
   }
-  
+
   goToProfile() {
     this.router.navigate(['/perfil']);
   }
-  
+
+  goToMetas() {
+    this.router.navigate(['/metas']);
+  }
 }

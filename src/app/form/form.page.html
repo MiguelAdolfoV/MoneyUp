@@ -1,21 +1,61 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>{{ type ? 'Registrar Ingreso' : 'Registrar Egreso' }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>MoneyUp</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <form (ngSubmit)="onSubmit()">
-    <ion-item>
-      <ion-label position="floating">Descripción</ion-label>
-      <ion-input [(ngModel)]="description" name="description" required></ion-input>
-    </ion-item>
+  <ion-grid class="form-grid" fixed>
+    <ion-row justify-content-center>
+      <ion-col size="12" size-md="8" size-lg="6">
 
-    <ion-item>
-      <ion-label position="floating">Monto</ion-label>
-      <ion-input [(ngModel)]="amount" name="amount" type="number" required></ion-input>
-    </ion-item>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>
+              {{ type ? 'Nuevo Ingreso 💰' : 'Nuevo Egreso 💸' }}
+            </ion-card-title>
+          </ion-card-header>
 
-    <ion-button expand="full" type="submit" [disabled]="!description || !amount">Registrar {{ type ? 'Ingreso' : 'Egreso' }}</ion-button>
-  </form>
+          <ion-card-content>
+            <form (ngSubmit)="onSubmit()" novalidate>
+
+              <ion-item lines="none">
+                <ion-label position="stacked">Descripción</ion-label>
+                <ion-input
+                  [(ngModel)]="description"
+                  name="description"
+                  required
+                ></ion-input>
+              </ion-item>
+
+              <ion-item lines="none">
+                <ion-label position="floating">Monto</ion-label>
+                <ion-input
+                  [(ngModel)]="amount"
+                  name="amount"
+                  type="number"
+                  required
+                ></ion-input>
+              </ion-item>
+
+              <ion-button
+                expand="block"
+                type="submit"
+                shape="round"
+                [disabled]="!description || !amount"
+                [ngClass]="type ? 'btn-ingreso' : 'btn-egreso'"
+              >
+                Registrar {{ type ? 'Ingreso' : 'Egreso' }}
+              </ion-button>
+
+            </form>
+          </ion-card-content>
+        </ion-card>
+
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

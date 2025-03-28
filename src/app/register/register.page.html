@@ -4,43 +4,73 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-    <ion-item [class.invalid]="username?.invalid && (username?.dirty || username?.touched)">
-      <ion-label position="floating">Nombre de usuario</ion-label>
-      <ion-input formControlName="username" type="text" required></ion-input>
-    </ion-item>
-    <ion-text *ngIf="username?.invalid && (username?.dirty || username?.touched)" color="danger">
-      <p *ngIf="username?.hasError('required')">El nombre de usuario es requerido.</p>
-    </ion-text>
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-content>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
 
-    <ion-item [class.invalid]="email?.invalid && (email?.dirty || email?.touched)">
-      <ion-label position="floating">Correo electrónico</ion-label>
-      <ion-input formControlName="email" type="email" required></ion-input>
-    </ion-item>
-    <ion-text *ngIf="email?.invalid && (email?.dirty || email?.touched)" color="danger">
-      <p *ngIf="email?.hasError('required')">El email es requerido.</p>
-      <p *ngIf="email?.hasError('email')">El email debe ser válido.</p>
-    </ion-text>
+        <!-- Nombre de usuario -->
+        <ion-item lines="none" [class.invalid]="username?.invalid && (username?.dirty || username?.touched)">
+          <ion-label position="stacked">Nombre de usuario</ion-label>
+          <ion-input formControlName="username" type="text" required></ion-input>
+        </ion-item>
+        <ion-text color="danger" *ngIf="username?.invalid && (username?.dirty || username?.touched)">
+          <small *ngIf="username?.hasError('required')">El nombre de usuario es requerido.</small>
+        </ion-text>
 
-    <ion-item [class.invalid]="password?.invalid && (password?.dirty || password?.touched)">
-      <ion-label position="floating">Contraseña</ion-label>
-      <ion-input formControlName="password" type="password" required></ion-input>
-    </ion-item>
-    <ion-text *ngIf="password?.invalid && (password?.dirty || password?.touched)" color="danger">
-      <p *ngIf="password?.hasError('required')">La contraseña es requerida.</p>
-      <p *ngIf="password?.hasError('minlength')">La contraseña debe tener al menos 6 caracteres.</p>
-      <p *ngIf="password?.hasError('pattern')">La contraseña debe contener al menos una letra mayúscula, una minúscula, un número y un carácter especial.</p>
-    </ion-text>
+        <!-- Correo electrónico -->
+        <ion-item lines="none" [class.invalid]="email?.invalid && (email?.dirty || email?.touched)">
+          <ion-label position="stacked">Correo electrónico</ion-label>
+          <ion-input formControlName="email" type="email" required></ion-input>
+        </ion-item>
+        <ion-text color="danger" *ngIf="email?.invalid && (email?.dirty || email?.touched)">
+          <small *ngIf="email?.hasError('required')">El email es requerido.</small>
+          <small *ngIf="email?.hasError('email')">El email debe ser válido.</small>
+        </ion-text>
 
-    <ion-button expand="full" type="submit" [disabled]="registerForm.invalid">Registrarse</ion-button>
-  </form>
+                <!-- Contraseña con toggle -->
+        <ion-item lines="none" class="input-password" [class.invalid]="password?.invalid && (password?.dirty || password?.touched)">
+          <ion-label position="stacked">Contraseña</ion-label>
+          <ion-input
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            required
+          ></ion-input>
+          <ion-icon
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+            class="toggle-eye-icon"
+            (click)="showPassword = !showPassword"
+          ></ion-icon>
+        </ion-item>
 
-  <ion-footer>
-    <ion-toolbar>
-      <ion-buttons slot="end">
-        <ion-button (click)="goToLogin()">¿Ya tienes cuenta? Inicia sesión</ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-footer>
+        <ion-text color="danger" *ngIf="password?.invalid && (password?.dirty || password?.touched)">
+          <small *ngIf="password?.hasError('required')">La contraseña es requerida.</small>
+          <small *ngIf="password?.hasError('minlength')">Mínimo 6 caracteres.</small>
+          <small *ngIf="password?.hasError('pattern')">Incluye mayúscula, minúscula, número y símbolo.</small>
+        </ion-text>
+
+        <!-- Botón -->
+        <ion-button
+          expand="block"
+          type="submit"
+          [disabled]="registerForm.invalid"
+          shape="round"
+          class="register-button"
+        >
+          Registrarse
+        </ion-button>
+
+        <!-- Link de login -->
+        <div class="ion-text-center" style="margin-top: 1rem;">
+          <p style="font-size: 14px;">
+            ¿Ya tienes cuenta?
+            <a (click)="goToLogin()" style="color: var(--ion-color-primary); text-decoration: underline; cursor: pointer;">
+              Inicia sesión
+            </a>
+          </p>
+        </div>
+
+      </form>
+    </ion-card-content>
+  </ion-card>
 </ion-content>

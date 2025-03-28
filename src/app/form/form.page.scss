@@ -1,0 +1,24 @@
+.form-grid {
+  margin-top: 24px;
+  margin-bottom: 80px;
+}
+
+ion-card {
+  padding: 8px;
+}
+
+ion-item {
+  margin-bottom: 16px;
+}
+
+/* Botón verde para ingresos */
+.btn-ingreso {
+  --background: var(--ion-color-primary);
+  --color: #fff;
+}
+
+/* Botón rojo para egresos */
+.btn-egreso {
+  --background: var(--ion-color-danger);
+  --color: #fff;
+}

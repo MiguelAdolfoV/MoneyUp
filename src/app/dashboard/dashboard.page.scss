@@ -1,13 +1,138 @@
-.card {
-  background-color: #76e750;
-  border: 1px solid #000000;
-  border-radius: 8px;
-  padding: 20px;
-  margin: 10px 0;
-  text-align: center;
-}
-canvas {
-  width: 80% !important;  /* Asegura que el canvas use el 100% del ancho del contenedor */
-  height: auto !important;  /* Mantiene la proporción de aspecto */
-}
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .stat-card {
+    text-align: center;
+    border-radius: var(--app-radius);
+    box-shadow: var(--app-box-shadow);
+    background: var(--ion-color-light);
+    color: var(--ion-color-dark);
+  
+    ion-card-content p {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0;
+    }
+  }
+  
+  .charts-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    margin-top: 24px;
+    margin-bottom: 60px;
+  }
+  
+  .dashboard-menu {
+    padding: 0.5rem;
+    background-color: var(--ion-color-light);
+    display: flex;
+    justify-content: center;
+    border-radius: 15px 15px 0 0;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+  
+  .link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 50px;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--ion-color-dark);
+    transition: width 0.2s ease-in;
+  
+    &:before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      border-radius: 8px;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      transform: translateX(100%);
+      transition: transform 0.2s ease-in;
+      background-color: var(--ion-color-medium);
+    }
+  
+    &:hover,
+    &:focus {
+      width: 120px;
+  
+      &:before,
+      .link-title {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  
+    ion-icon {
+      font-size: 24px;
+    }
+  }
+  
+  .link-icon {
+    width: 28px;
+    height: 28px;
+    display: block;
+    flex-shrink: 0;
+    left: 16px;
+    position: absolute;
+  }
+  
+  .link-title {
+    transform: translateX(100%);
+    transition: transform 0.2s ease-in;
+    display: block;
+    text-align: center;
+    text-indent: 28px;
+    width: 100%;
+    opacity: 0;
+  }
+  
+  
+  @media (prefers-color-scheme: dark) {
+    .stat-card {
+      background: var(--ion-color-light);
+      color: var(--ion-color-dark);
+    }
+  }
+  
+  .charts-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    margin-top: 24px;
+    margin-bottom: 80px;
+  }
+  
+  .chart-wrapper {
+    width: 100%;
+    max-width: 360px; // 📏 límite de ancho
+    height: auto;
+    padding: 1rem;
+    background-color: var(--ion-color-light);
+    border-radius: var(--app-radius);
+    box-shadow: var(--app-box-shadow);
+  
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+  }
+  
   

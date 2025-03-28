@@ -1,16 +1,19 @@
 import { Component } from '@angular/core';
 import { ModalController, ToastController } from '@ionic/angular';
+import { AuthService } from '../services/auth.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-metas',
   templateUrl: './metas.page.html',
   styleUrls: ['./metas.page.scss'],
+  standalone: false
 })
 export class MetasPage {
-  
-  newMeta: string = ''; // Variable para la nueva meta
-  metas: string[] = []; // Arreglo para almacenar las metas
-  financialTips: any[] = [ // Consejos financieros predefinidos con tácticas detalladas
+  newMeta: string = '';
+  metas: any[] = []; // ahora cada meta tiene: meta, consejo, usuario, etc.
+
+  financialTips: any[] = [
     {
       title: "¡Para lograr esta meta, puedes vender productos caseros!",
       steps: [
@@ -48,56 +51,110 @@ export class MetasPage {
       ]
     }
   ];
-  financialTip: any = {}; // Consejo seleccionado
-  isModalOpen: boolean = false; // Estado del modal
 
-  constructor(private modalController: ModalController, private toastController: ToastController) {}
+  financialTip: any = {};
+  isModalOpen: boolean = false;
 
-  // Función para mostrar un toast
+  constructor(
+    private modalController: ModalController,
+    private toastController: ToastController,
+    private authService: AuthService,
+    private http: HttpClient
+  ) {}
+
+  async ionViewDidEnter() {
+    await this.loadRemoteMetas();
+  }
+
+  async addMeta() {
+    if (!this.newMeta.trim()) {
+      this.presentToast('Por favor, ingresa una meta válida', 'warning');
+      return;
+    }
+
+    const token = await this.authService.getToken();
+    const user = await this.authService.getUser();
+    const username = user?.username;
+    const consejo = "Reducir gastos innecesarios y registrar los ingresos y egresos"; // o selecciona uno dinámico
+
+    if (!token || !username) {
+      this.presentToast('Sesión inválida', 'danger');
+      return;
+    }
+
+    const metaPayload = {
+      usuario: username,
+      meta: this.newMeta.trim(),
+      consejo
+    };
+
+    const headers = new HttpHeaders({
+      'x-access-token': token,
+      'Content-Type': 'application/json'
+    });
+
+    this.http.post('https://rest-api-sigma-five.vercel.app/api/ingreso/metas', metaPayload, { headers }).subscribe(
+      async (res: any) => {
+        this.newMeta = '';
+        this.presentToast('Meta registrada correctamente');
+        await this.loadRemoteMetas(); // 🔄 Recargar metas
+      },
+      (error) => {
+        console.error(error);
+        this.presentToast('Error al guardar la meta', 'danger');
+      }
+    );
+  }
+
+  async loadRemoteMetas() {
+    const token = await this.authService.getToken();
+    const user = await this.authService.getUser();
+    const username = user?.username;
+  
+    if (!token || !username) {
+      this.metas = [];
+      return;
+    }
+  
+    const headers = new HttpHeaders({
+      'x-access-token': token
+    });
+  
+    this.http.get<any[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/metas', { headers }).subscribe(
+      async (response) => {
+        const metasFiltradas = response.filter(meta => meta.usuario === username);
+        this.metas = metasFiltradas;
+  
+        // ✅ Guardar copia local en Ionic Storage
+        await this.authService.saveMetas(this.metas);
+      },
+      async (error) => {
+        console.error('Error al cargar metas desde la API:', error);
+  
+        // ⚠️ Cargar desde storage como respaldo
+        this.metas = await this.authService.getMetas();
+  
+        this.presentToast('No se pudieron cargar metas en línea, mostrando copia local.', 'warning');
+      }
+    );
+  }
+  
+  openTip(index: number) {
+    this.financialTip = this.financialTips[Math.floor(Math.random() * this.financialTips.length)];
+    this.isModalOpen = true;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+  }
+
   async presentToast(message: string, color: string = 'success') {
     const toast = await this.toastController.create({
-      message: message,
-      duration: 2000, // Duración en milisegundos
+      message,
+      duration: 2000,
       position: 'bottom',
-      color: color // 'success', 'danger', 'warning', etc.
+      color
     });
     await toast.present();
   }
-
-   // Función para agregar una meta
-   addMeta() {
-    if (this.newMeta.trim()) {
-      // Agregar la meta al arreglo
-      this.metas.push(this.newMeta.trim());
-      this.newMeta = ''; // Limpiar el input
-      // Guardar las metas en localStorage para persistencia
-      localStorage.setItem('metas', JSON.stringify(this.metas));
-
-      // Mostrar mensaje de éxito
-      this.presentToast('Meta creada exitosamente ');
-    } else {
-      this.presentToast('Por favor, ingresa una meta válida', 'warning');
-    }
-  }
-
-   // Función para abrir el modal con el consejo
-   openTip(index: number) {
-    this.financialTip = this.financialTips[Math.floor(Math.random() * this.financialTips.length)];
-    this.isModalOpen = true; // Abrir el modal
-  }
-
-  // Función para cerrar el modal
-  closeModal() {
-    this.isModalOpen = false; // Cerrar el modal
-  }
-
-
-  // Cargar las metas desde localStorage cuando la página se inicializa
-  ionViewDidEnter() {
-    const storedMetas = localStorage.getItem('metas');
-    if (storedMetas) {
-      this.metas = JSON.parse(storedMetas);
-    }
-  }
-
 }
