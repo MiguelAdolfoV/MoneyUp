@@ -59,9 +59,13 @@ export class FormPage implements OnInit {
         await this.presentToast(`${this.type ? 'Ingreso' : 'Egreso'} registrado con éxito. 🎉`, 'success');
         this.router.navigate(['/dashboard']);
       },
-      async (error) => {
-        console.error('Error al registrar transacción', error);
-        await this.presentToast('Error al registrar la transacción.', 'danger');
+      async error => {
+        console.error('Error inesperado:', error);
+        const customMessage = error?.error?.message;
+        if (customMessage) {
+          this.presentToast(customMessage);
+        } else {
+        }
       }
     );
   }

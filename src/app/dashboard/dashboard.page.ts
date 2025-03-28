@@ -49,56 +49,40 @@ export class DashboardPage {
       event.target.complete();
     }, 1500);
   }
-
+  
   async loadData() {
     const token = await this.authService.getToken();
     const user = await this.authService.getUser();
     const username = user?.username;
-
+  
     if (!token || !username) {
       this.router.navigate(['/login']);
       return;
     }
-
+  
     const headers = new HttpHeaders({ 'x-access-token': token });
-
-    this.http.get<FinancialEntry[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/', { headers }).subscribe(
-      data => {
-        this.totalSavings = 0;
-        this.totalExpenses = 0;
-        this.lastWeekSavings = 0;
-
-        const today = new Date();
-        const lastWeek = new Date();
-        lastWeek.setDate(today.getDate() - 7);
-
-        // 🔎 Filtrar datos del usuario actual
-        const filteredData = data.filter(entry => entry.usuario === username);
-
-        filteredData.forEach((entry) => {
-          const entryDate = new Date(entry.fecha);
-          if (entry.tipo) {
-            this.totalSavings += entry.cantidad;
-            if (entryDate >= lastWeek) {
-              this.lastWeekSavings += entry.cantidad;
-            }
-          } else {
-            this.totalExpenses += entry.cantidad;
+  
+    if (navigator.onLine) {
+      // ✅ Conectado: obtener desde API y guardar en Storage
+      this.http.get<FinancialEntry[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/', { headers }).subscribe(
+        async data => {
+          const filtered = data.filter(entry => entry.usuario === username);
+          await this.authService.saveIngresos(filtered);
+          this.processFinancialData(filtered);
+        },
+        error => {
+          if (error.status === 401) {
+            this.router.navigate(['/login']);
           }
-        });
-
-        this.lastWeekSavings = this.totalSavings - this.totalExpenses;
-
-        this.renderCharts();
-      },
-      error => {
-        if (error.status === 401) {
-          this.router.navigate(['/login']);
         }
-      }
-    );
+      );
+    } else {
+      // ❌ Sin conexión: usar datos locales
+      const offlineData = await this.authService.getIngresos();
+      this.processFinancialData(offlineData);
+    }
   }
-
+  
   async loadFinancialTips() {
     const token = await this.authService.getToken();
     const user = await this.authService.getUser();
@@ -219,6 +203,31 @@ export class DashboardPage {
   
     await alert.present();
   }  
+
+  processFinancialData(data: FinancialEntry[]) {
+    this.totalSavings = 0;
+    this.totalExpenses = 0;
+    this.lastWeekSavings = 0;
+  
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+  
+    data.forEach((entry) => {
+      const entryDate = new Date(entry.fecha);
+      if (entry.tipo) {
+        this.totalSavings += entry.cantidad;
+        if (entryDate >= lastWeek) {
+          this.lastWeekSavings += entry.cantidad;
+        }
+      } else {
+        this.totalExpenses += entry.cantidad;
+      }
+    });
+  
+    this.lastWeekSavings = this.totalSavings - this.totalExpenses;
+    this.renderCharts();
+  }
 
   goToForm(type: string) {
     this.router.navigate(['/form'], { queryParams: { type } });

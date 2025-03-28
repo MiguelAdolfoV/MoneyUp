@@ -99,11 +99,14 @@ export class MetasPage {
         this.presentToast('Meta registrada correctamente');
         await this.loadRemoteMetas(); // 🔄 Recargar metas
       },
-      (error) => {
-        console.error(error);
-        this.presentToast('Error al guardar la meta', 'danger');
-      }
-    );
+      async error => {
+        console.error('Error al guardar la meta', error);
+        const customMessage = error?.error?.message;
+        if (customMessage) {
+          this.presentToast(customMessage);
+        } else {
+        }
+      }   );
   }
 
   async loadRemoteMetas() {

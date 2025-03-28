@@ -1,3 +1,13 @@
 <ion-app>
+  <div
+    class="offline-floating"
+    *ngIf="!isOnline"
+    #draggableBanner
+    (mousedown)="startDrag($event, draggableBanner)"
+    (touchstart)="startDrag($event, draggableBanner)"
+  >
+    Fuera de línea
+  </div>
+
   <ion-router-outlet></ion-router-outlet>
 </ion-app>
