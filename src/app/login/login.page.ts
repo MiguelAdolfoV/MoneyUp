@@ -1,8 +1,7 @@
-// src/app/login/login.page.ts
-
 import { Component } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import { ToastController, LoadingController } from '@ionic/angular';
 
 @Component({
   selector: 'app-login',
@@ -11,54 +10,97 @@ import { Router } from '@angular/router';
   standalone: false
 })
 export class LoginPage {
+  showPassword: boolean = false;
   email: string = '';
   password: string = '';
-  loading: boolean = false;  // Para mostrar un indicador de carga
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private toastController: ToastController,
+    private loadingController: LoadingController
+  ) {}
 
-  // Método para manejar el submit del formulario de login
+  async ngOnInit() {
+    const isLoggedIn = await this.authService.isLoggedIn();
+    if (isLoggedIn) {
+      this.router.navigate(['/dashboard']);
+    }
+  }  
+
+  async presentLoading(message: string = 'Iniciando sesión...') {
+    const loading = await this.loadingController.create({
+      message,
+      spinner: 'crescent',
+      cssClass: 'custom-loading',
+      backdropDismiss: false
+    });
+    await loading.present();
+    return loading;
+  }
+
   onSubmit() {
     if (!this.email || !this.password) {
-      alert('Por favor ingresa tanto el correo electrónico como la contraseña.');
+      this.presentToast('Por favor ingresa tanto el correo electrónico como la contraseña.');
       return;
     }
 
-    this.loading = true;
+    this.presentLoading().then((loading) => {
+      this.authService.login(this.email, this.password).subscribe(
+        async (response: any) => {
+          loading.dismiss();
 
-    this.authService.login(this.email, this.password).subscribe(
-      (response: any) => {
-        const token = response.token;
-        const userId = response.id;
+          const token = response.token;
+          const user = response.user;
 
-        if (token) {
-          // Guardar el token en localStorage
-          localStorage.setItem('authToken', token);  // Guardar el token
-          localStorage.setItem('userId', userId);    // Guardar el ID de usuario
+          if (token && user) {
+            // ✅ Guardar sesión usando Ionic Storage
+            await this.authService.saveSession(token, user);
 
-          console.log('Token guardado en localStorage:', token); // Verificar en consola
+            // 👁️ Eliminar foco del botón
+            (document.activeElement as HTMLElement)?.blur();
 
-          // Redirigir al dashboard
-          this.router.navigate(['/dashboard']);
-        } else {
-          alert('Error: no se recibió un token.');
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.presentToast('Error: datos de sesión incompletos.');
+          }
+        },
+        (error: { error: { message: any }; status: number }) => {
+          loading.dismiss();
+          console.error('Error en el inicio de sesión', error);
+
+          const customMessage = error?.error?.message;
+
+          if (customMessage) {
+            this.presentToast(customMessage);
+          } else if (error.status === 401) {
+            this.presentToast('Credenciales incorrectas, por favor intenta de nuevo.');
+          } else {
+            this.presentToast('Hubo un error con el servidor. Intenta más tarde.');
+          }
         }
-      },
-      (error) => {
-        this.loading = false;
-        console.error('Error en el inicio de sesión', error);
-        if (error.status === 401) {
-          alert('Credenciales incorrectas, por favor intenta de nuevo.');
-        } else {
-          alert('Hubo un error con el servidor. Por favor, intenta más tarde.');
-        }
-      }
-    );
+      );
+    });
   }
 
-  // Redirigir a la página de registro
+  async presentToast(message: string) {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger',
+      buttons: [
+        {
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+
+    await toast.present();
+  }
+
   goToRegister() {
     this.router.navigate(['/register']);
   }
 }
-

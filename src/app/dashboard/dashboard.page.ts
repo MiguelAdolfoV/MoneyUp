@@ -1,12 +1,15 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { NavigationEnd, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
+import { AuthService } from '../services/auth.service';
+import { AlertController } from '@ionic/angular'; 
 
 interface FinancialEntry {
   tipo: boolean;
   cantidad: number;
   fecha: string;
+  usuario: string;
 }
 
 @Component({
@@ -15,52 +18,45 @@ interface FinancialEntry {
   styleUrls: ['./dashboard.page.scss'],
   standalone: false
 })
-export class DashboardPage implements AfterViewInit {
+export class DashboardPage {
   totalSavings: number = 0;
   totalExpenses: number = 0;
   lastWeekSavings: number = 0;
-  isModalOpen: boolean = false;
   showTips: boolean = false;
   consejos: string[] = [];
 
+  pieChart: Chart | undefined;
+  barChart: Chart | undefined;
+
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private alertController: AlertController,
+    private authService: AuthService
   ) {
     Chart.register(...registerables);
-    this.router.events.subscribe((event) => {
-      if (event instanceof NavigationEnd && event.url === '/dashboard') {
-        this.loadData(); // Aquí llamas la función que refresca la información
-      }
-    });
   }
-
-  ngAfterViewInit() {
-    this.loadData();
-    this.loadFinancialTips(); // Carga los consejos al iniciar
-  }
-  
-  refreshData(event: any) {
-    console.log("Refrescando datos...");
-    this.loadData(); // Llama a la función que carga los datos
-  
-    setTimeout(() => {
-      event.target.complete(); // Detiene el efecto de refresco
-      console.log("Datos actualizados");
-    }, 1500); // Simula un pequeño tiempo de espera
-  }
-  
 
   ionViewWillEnter() {
-    console.log("Dashboard cargado");
-    this.loadData(); // Se ejecuta cada vez que se muestra el dashboard
+    this.loadData();
+    this.loadFinancialTips();
   }
 
-  loadData() {
-    const token = localStorage.getItem('authToken');  
-    if (!token) {
-      console.error('No se encontró el token en el almacenamiento local.');
-      this.router.navigate(['/login']);  
+  refreshData(event: any) {
+    this.loadData();
+
+    setTimeout(() => {
+      event.target.complete();
+    }, 1500);
+  }
+
+  async loadData() {
+    const token = await this.authService.getToken();
+    const user = await this.authService.getUser();
+    const username = user?.username;
+
+    if (!token || !username) {
+      this.router.navigate(['/login']);
       return;
     }
 
@@ -72,35 +68,30 @@ export class DashboardPage implements AfterViewInit {
         this.totalExpenses = 0;
         this.lastWeekSavings = 0;
 
-        data.forEach((entry: FinancialEntry) => {
-          if (entry.tipo) {  
-            this.totalSavings += entry.cantidad;
-          } else {  
-            this.totalExpenses += entry.cantidad;
-          }
+        const today = new Date();
+        const lastWeek = new Date();
+        lastWeek.setDate(today.getDate() - 7);
 
+        // 🔎 Filtrar datos del usuario actual
+        const filteredData = data.filter(entry => entry.usuario === username);
+
+        filteredData.forEach((entry) => {
           const entryDate = new Date(entry.fecha);
-          const today = new Date();
-          const lastWeek = new Date();
-          lastWeek.setDate(today.getDate() - 7);  
-          this.lastWeekSavings = 0;
-        
-          if (entryDate >= lastWeek) {
-            this.lastWeekSavings += entry.cantidad;
+          if (entry.tipo) {
+            this.totalSavings += entry.cantidad;
+            if (entryDate >= lastWeek) {
+              this.lastWeekSavings += entry.cantidad;
+            }
+          } else {
+            this.totalExpenses += entry.cantidad;
           }
         });
 
         this.lastWeekSavings = this.totalSavings - this.totalExpenses;
 
-        console.log('Total Ingresos:', this.totalSavings);
-        console.log('Total Egresos:', this.totalExpenses);
-        console.log('Ahorro Última Semana:', this.lastWeekSavings);
-
-        this.createPieChart();
-        this.createBarChart(this.totalSavings, this.totalExpenses);
+        this.renderCharts();
       },
       error => {
-        console.error('Error al cargar los datos de ingresos:', error);
         if (error.status === 401) {
           this.router.navigate(['/login']);
         }
@@ -108,104 +99,84 @@ export class DashboardPage implements AfterViewInit {
     );
   }
 
-  loadFinancialTips() {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      console.error('No se encontró el token en el almacenamiento local.');
+  async loadFinancialTips() {
+    const token = await this.authService.getToken();
+    const user = await this.authService.getUser();
+    const username = user?.username;
+
+    if (!token || !username) {
       this.router.navigate(['/login']);
       return;
     }
-  
-    const url = 'https://rest-api-sigma-five.vercel.app/api/ingreso/consejo';
-    const username = localStorage.getItem('username');
 
+    const url = 'https://rest-api-sigma-five.vercel.app/api/ingreso/consejo';
 
     const headers = new HttpHeaders({
       'x-access-token': token,
       'Content-Type': 'application/json'
     });
-  
-    const body = {
-      usuario: username 
-    };
-  
+
+    const body = { usuario: username };
 
     this.http.post(url, body, { headers }).subscribe(
       (response: any) => {
-        console.log('Consejos recibidos:', response);
-        
-
-        if (response && response.consejo) {
+        if (response?.consejo) {
           this.consejos = [response.consejo];
-          console.log('Consejos procesados:', this.consejos);
-        } else if (response && response.consejos && Array.isArray(response.consejos)) {
+        } else if (Array.isArray(response?.consejos)) {
           this.consejos = response.consejos;
-          console.log('Consejos procesados:', this.consejos);
         } else {
-          console.log('No se encontraron consejos en la respuesta.');
           this.consejos = [];
         }
       },
-      (error) => {
-        console.error('Error al obtener los consejos:', error);
-        alert('Hubo un error al cargar los consejos. Por favor, intenta más tarde.');
+      () => {
         this.consejos = [];
       }
     );
   }
-  
 
-  getRandomColor(): string {
-    const r = Math.floor(Math.random() * 256); 
-    const g = Math.floor(Math.random() * 256); 
-    const b = Math.floor(Math.random() * 256); 
-    const a = (Math.random() * 0.5 + 0.5).toFixed(2); // Opacidad (valor entre 0.5 y 1)
-    return `rgba(${r}, ${g}, ${b}, ${a})`;  // Retorna en formato rgba
-  }
+  renderCharts() {
+    if (this.pieChart) {
+      this.pieChart.destroy();
+    }
 
-  createPieChart() {
-    const ctx = document.getElementById('myPieChart') as HTMLCanvasElement;
-    new Chart(ctx, {
+    if (this.barChart) {
+      this.barChart.destroy();
+    }
+
+    const pieCtx = document.getElementById('myPieChart') as HTMLCanvasElement;
+    const barCtx = document.getElementById('myBarChart') as HTMLCanvasElement;
+
+    this.pieChart = new Chart(pieCtx, {
       type: 'pie',
       data: {
         labels: ['Ingresos', 'Gastos'],
         datasets: [{
           label: 'Ingresos y Gastos',
           data: [this.totalSavings, this.totalExpenses],
-          backgroundColor: [
-            this.getRandomColor(),  // Color aleatorio para cada segmento
-            this.getRandomColor()
-          ],
-          hoverBackgroundColor: [
-            this.getRandomColor(),  // Colores al pasar el ratón
-            this.getRandomColor()
-          ]
+          backgroundColor: [this.getRandomColor(), this.getRandomColor()]
         }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
     });
-  }
 
-  createBarChart(totalIncomes: number, totalExpenditures: number) {
-    const ctx = document.getElementById('myBarChart') as HTMLCanvasElement;
-    new Chart(ctx, {
+    this.barChart = new Chart(barCtx, {
       type: 'bar',
       data: {
         labels: ['Ingresos', 'Egresos'],
         datasets: [{
           label: 'Ingresos y Egresos',
-          data: [totalIncomes, totalExpenditures],
-          backgroundColor: [
-            this.getRandomColor(),  // Colores aleatorios para las barras
-            this.getRandomColor()
-          ],
-          borderColor: [
-            this.getRandomColor(),  // Colores aleatorios para los bordes
-            this.getRandomColor()
-          ],
+          data: [this.totalSavings, this.totalExpenses],
+          backgroundColor: [this.getRandomColor(), this.getRandomColor()],
+          borderColor: [this.getRandomColor(), this.getRandomColor()],
           borderWidth: 1
         }]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: {
           y: {
             beginAtZero: true
@@ -214,21 +185,40 @@ export class DashboardPage implements AfterViewInit {
       }
     });
   }
-  
-  goToMetas() {
-    this.router.navigate(['/metas']); 
-  }
-  openModal() {
-    this.isModalOpen = true;
-  }
 
-  closeModal() {
-    this.isModalOpen = false;
+  getRandomColor(): string {
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    const a = (Math.random() * 0.5 + 0.5).toFixed(2);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
   }
 
   toggleFinancialTips() {
     this.showTips = !this.showTips;
   }
+  async logout() {
+    const alert = await this.alertController.create({
+      header: 'Cerrar sesión',
+      message: '¿Estás seguro de que quieres cerrar sesión?',
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Cerrar sesión',
+          role: 'destructive',
+          handler: async () => {
+            await this.authService.logout();
+            this.router.navigateByUrl('/login', { replaceUrl: true });
+          }
+        }
+      ]
+    });
+  
+    await alert.present();
+  }  
 
   goToForm(type: string) {
     this.router.navigate(['/form'], { queryParams: { type } });
@@ -236,5 +226,9 @@ export class DashboardPage implements AfterViewInit {
 
   goToProfile() {
     this.router.navigate(['/perfil']);
+  }
+
+  goToMetas() {
+    this.router.navigate(['/metas']);
   }
 }

@@ -1,22 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-form',
   templateUrl: './form.page.html',
   styleUrls: ['./form.page.scss'],
-  standalone : false
+  standalone: false
 })
 export class FormPage implements OnInit {
-  description: string = ''; 
-  amount: number = 0;        
-  type: boolean = true;     
+  description: string = '';
+  amount: number = 0;
+  type: boolean = true;
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private authService: AuthService,
+    private toastController: ToastController
   ) {}
 
   ngOnInit() {
@@ -29,53 +33,47 @@ export class FormPage implements OnInit {
     });
   }
 
-  // Método para manejar el envío del formulario
-  onSubmit() {
-    const token = localStorage.getItem('authToken');  
+  async onSubmit() {
+    const token = await this.authService.getToken();
+    const user = await this.authService.getUser();
+    const username = user?.username;
 
-    if (!token) {
-      console.error('No se encontró el token en el almacenamiento local.');
-
-      // Redirigir al login si no hay token
+    if (!token || !username) {
+      this.presentToast('Sesión no válida. Redirigiendo...', 'danger');
       this.router.navigate(['/login']);
       return;
     }
 
-    // Preparar los datos de la transacción
     const transactionData = {
-      usuario: 'cliente2',   
-      tipo: this.type,      
-      cantidad: this.amount,  
-      descripcion: this.description  
+      usuario: username,
+      tipo: this.type,
+      cantidad: this.amount,
+      descripcion: this.description
     };
 
-    // Establecer los encabezados de la solicitud con el token
-    const headers = new HttpHeaders({
-      'x-access-token': token 
-    });
-
-    // URL de la API
+    const headers = new HttpHeaders({ 'x-access-token': token });
     const apiUrl = 'https://rest-api-sigma-five.vercel.app/api/ingreso/';
 
-    // Realizar la solicitud POST
     this.http.post(apiUrl, transactionData, { headers }).subscribe(
-      (response) => {
-        // Respuesta exitosa
-        console.log(`${this.type ? 'Ingreso' : 'Egreso'} registrado`, response);
-        
-        // Mostrar mensaje de éxito
-        alert(`${this.type ? 'Ingreso' : 'Egreso'} registrado con éxito.`);
-        
-        // Redirigir al dashboard
-        this.router.navigate(['/dashboard']);  
+      async () => {
+        await this.presentToast(`${this.type ? 'Ingreso' : 'Egreso'} registrado con éxito. 🎉`, 'success');
+        this.router.navigate(['/dashboard']);
       },
-      (error) => {
-        // Manejo de errores
+      async (error) => {
         console.error('Error al registrar transacción', error);
-        
-        // Mostrar mensaje de error
-        alert('Ocurrió un error al registrar la transacción.');
+        await this.presentToast('Error al registrar la transacción.', 'danger');
       }
     );
+  }
+
+  async presentToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
+    const toast = await this.toastController.create({
+      message,
+      duration: 2500,
+      position: 'bottom',
+      color,
+      buttons: [{ icon: 'close', role: 'cancel' }]
+    });
+    await toast.present();
   }
 }

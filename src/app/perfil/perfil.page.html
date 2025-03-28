@@ -1,0 +1,63 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- 👤 Info del usuario -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Información del Usuario</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item>
+          <ion-label><strong>Usuario:</strong></ion-label>
+          <ion-text>{{ userData?.username }}</ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label><strong>Correo:</strong></ion-label>
+          <ion-text>{{ userData?.email }}</ion-text>
+        </ion-item>
+        <ion-item>
+          <ion-label><strong>Rol:</strong></ion-label>
+          <ion-text>{{ userData?.roles[0]?.name || 'N/A' }}</ion-text>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- 💸 Transacciones del usuario -->
+  <ion-card *ngIf="transacciones.length > 0">
+    <ion-card-header>
+      <ion-card-title>Historial Financiero</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let t of transacciones">
+          <ion-label>
+            <p>
+              <strong [ngClass]="t.tipo ? 'ingreso' : 'gasto'">
+                {{ t.tipo ? 'Ingreso' : 'Gasto' }}
+              </strong>
+            </p>
+            <p>Cantidad: {{ t.cantidad | currency }}</p>
+            <p>Fecha: {{ t.createdAt | date: 'short' }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="transacciones.length === 0">
+    <ion-card-content>
+      <p>No tienes transacciones registradas aún.</p>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>
