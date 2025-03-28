@@ -8,33 +8,39 @@
   <ion-card>
     <ion-card-content>
       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
-
         <!-- Nombre de usuario -->
         <ion-item lines="none" [class.invalid]="username?.invalid && (username?.dirty || username?.touched)">
           <ion-label position="stacked">Nombre de usuario</ion-label>
-          <ion-input formControlName="username" type="text" required></ion-input>
+          <ion-input
+            formControlName="username"
+            type="text"
+            required
+            (ionInput)="onInputSanitize('username')"
+            (keydown)="preventSpace($event)"
+          ></ion-input>
         </ion-item>
-        <ion-text color="danger" *ngIf="username?.invalid && (username?.dirty || username?.touched)">
-          <small *ngIf="username?.hasError('required')">El nombre de usuario es requerido.</small>
-        </ion-text>
 
         <!-- Correo electrónico -->
         <ion-item lines="none" [class.invalid]="email?.invalid && (email?.dirty || email?.touched)">
           <ion-label position="stacked">Correo electrónico</ion-label>
-          <ion-input formControlName="email" type="email" required></ion-input>
+          <ion-input
+            formControlName="email"
+            type="email"
+            required
+            (ionInput)="onInputSanitize('email')"
+            (keydown)="preventSpace($event)"
+          ></ion-input>
         </ion-item>
-        <ion-text color="danger" *ngIf="email?.invalid && (email?.dirty || email?.touched)">
-          <small *ngIf="email?.hasError('required')">El email es requerido.</small>
-          <small *ngIf="email?.hasError('email')">El email debe ser válido.</small>
-        </ion-text>
 
-                <!-- Contraseña con toggle -->
+        <!-- Contraseña -->
         <ion-item lines="none" class="input-password" [class.invalid]="password?.invalid && (password?.dirty || password?.touched)">
           <ion-label position="stacked">Contraseña</ion-label>
           <ion-input
             [type]="showPassword ? 'text' : 'password'"
             formControlName="password"
             required
+            (ionInput)="onInputSanitize('password')"
+            (keydown)="preventSpace($event)"
           ></ion-input>
           <ion-icon
             [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"

@@ -72,9 +72,11 @@ export class RegisterPage implements OnInit {
         async error => {
           await loading.dismiss();
           console.error('Error en el registro', error);
-          
-          const errorMessage = error?.error?.message || 'Error inesperado. Intenta de nuevo.';
-          await this.presentToast(errorMessage);
+          const customMessage = error?.error?.message;
+          if (customMessage) {
+            this.presentToast(customMessage);
+          } else {
+          }
         }
       );
     } else {
@@ -113,6 +115,20 @@ export class RegisterPage implements OnInit {
       }, 400);
     }
   }
+
+  onInputSanitize(field: 'username' | 'email' | 'password') {
+    const value = this.registerForm.get(field)?.value || '';
+    const sanitized = value.replace(/\s/g, '');
+    this.registerForm.get(field)?.setValue(sanitized, { emitEvent: false });
+  }
+  
+  preventSpace(event: KeyboardEvent) {
+    if (event.key === ' ') {
+      event.preventDefault();
+      this.presentToast('No se permiten espacios en este campo.');
+    }
+  }
+  
 
   get username() {
     return this.registerForm.get('username');

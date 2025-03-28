@@ -54,10 +54,8 @@ export class LoginPage {
           const user = response.user;
 
           if (token && user) {
-            // ✅ Guardar sesión usando Ionic Storage
             await this.authService.saveSession(token, user);
 
-            // 👁️ Eliminar foco del botón
             (document.activeElement as HTMLElement)?.blur();
 
             this.router.navigate(['/dashboard']);
@@ -76,12 +74,29 @@ export class LoginPage {
           } else if (error.status === 401) {
             this.presentToast('Credenciales incorrectas, por favor intenta de nuevo.');
           } else {
-            this.presentToast('Hubo un error con el servidor. Intenta más tarde.');
           }
         }
       );
     });
   }
+  
+    // Eliminar espacios al escribir o pegar texto
+  onInputSanitize(field: 'email' | 'password') {
+    if (field === 'email') {
+      this.email = this.email.replace(/\s/g, '');
+    } else if (field === 'password') {
+      this.password = this.password.replace(/\s/g, '');
+    }
+  }
+
+  // Prevenir escribir espacios desde el teclado
+  preventSpace(event: KeyboardEvent) {
+    if (event.key === ' ') {
+      event.preventDefault();
+      this.presentToast('No se permiten espacios en este campo.');
+    }
+  }
+
 
   async presentToast(message: string) {
     const toast = await this.toastController.create({

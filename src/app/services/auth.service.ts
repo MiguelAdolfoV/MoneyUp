@@ -65,10 +65,20 @@ async getMetas(): Promise<string[]> {
   return stored || [];
 }
 
-// 👤 Método para registrar usuarios
+// 👤 Registrar usuarios
 register(username: string, email: string, password: string, roles: string[]): Observable<any> {
   const body = { username, email, password, roles };
   return this.http.post(`${this.API_URL}/signup`, body);
+}
+
+// 🔍 Guardar ingresos
+async saveIngresos(data: any[]): Promise<void> {
+  await this._storage?.set('ingresos', data);
+}
+
+// 🔍 Mostrar ingresos
+async getIngresos(): Promise<any[]> {
+  return (await this._storage?.get('ingresos')) || [];
 }
 
 }
