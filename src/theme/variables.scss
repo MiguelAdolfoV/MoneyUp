@@ -1,2 +1,63 @@
-// For information on how to create your own theme, please see:
-// http://ionicframework.com/docs/theming/
+/* theme/variables.scss */
+
+/* ===============================
+   🌞 Paleta de colores - Modo Claro (por defecto)
+   =============================== */
+   :root {
+    /* 🎯 Colores principales */
+    --ion-color-primary: #00d26a;  // Verde brillante
+    --ion-color-secondary: #00c2ff; // Azul vibrante
+    --ion-color-tertiary: #ffc300;  // Amarillo suave
+    --ion-color-success: #28c76f;
+    --ion-color-warning: #ff9f43;
+    --ion-color-danger: #ea5455;
+  
+    /* 🧊 Colores neutros */
+    --ion-color-light: #fafafa;
+    --ion-color-medium: #e0e0e0;
+    --ion-color-dark: #1e1e1e;
+  
+    /* ⛑️ Colores auxiliares */
+    --ion-color-error-bg: #f8d7da;
+  
+    /* 🎨 Diseño y tokens */
+    --app-radius: 16px;
+    --app-box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    --app-modal-radius: 20px;
+    --app-form-max-width: 500px;
+  
+    /* Toolbars */
+    --ion-toolbar-background: var(--ion-color-primary);
+    --ion-toolbar-color: #ffffff;
+  
+    --button-background: var(--ion-color-primary);
+    --button-color: #ffffff;
+  
+    --transition-speed: 0.3s;
+  }
+  
+  /* ===============================
+     🌒 Paleta - Modo Oscuro (automático)
+     =============================== */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ion-color-primary: #00d26a;
+      --ion-color-secondary: #00c2ff;
+      --ion-color-tertiary: #ffc300;
+      --ion-color-success: #3cd278;
+      --ion-color-warning: #ffa726;
+      --ion-color-danger: #ff6b6b;
+  
+      --ion-color-light: #1e1e1e;
+      --ion-color-medium: #2c2c2c;
+      --ion-color-dark: #f1f1f1;
+  
+      --ion-color-error-bg: #5a1f1f;
+  
+      ion-toolbar {
+        --background: var(--ion-color-primary) !important;
+        --color: #000 !important;
+      }
+    }
+  }
+  
