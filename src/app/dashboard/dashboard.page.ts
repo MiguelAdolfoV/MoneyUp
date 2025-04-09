@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Chart, registerables } from 'chart.js';
+import { Chart, Colors, registerables } from 'chart.js';
 import { AuthService } from '../services/auth.service';
 import { AlertController } from '@ionic/angular'; 
 
@@ -150,13 +150,22 @@ export class DashboardPage {
       type: 'bar',
       data: {
         labels: ['Ingresos', 'Egresos'],
-        datasets: [{
-          label: 'Ingresos y Egresos',
-          data: [this.totalSavings, this.totalExpenses],
-          backgroundColor: [this.getRandomColor(), this.getRandomColor()],
-          borderColor: [this.getRandomColor(), this.getRandomColor()],
-          borderWidth: 1
-        }]
+        datasets: [
+          {
+            label: 'Ingresos',
+            data: [this.totalSavings, 0],
+            backgroundColor: this.getRandomColor(),
+            borderWidth: 1,
+            barThickness: 200
+          },
+          {
+            label: 'Egresos',
+            data: [0, this.totalExpenses],
+            backgroundColor: this.getRandomColor(),
+            borderWidth: 1,
+            barThickness: 200
+          }
+        ]
       },
       options: {
         responsive: true,
@@ -167,7 +176,7 @@ export class DashboardPage {
           }
         }
       }
-    });
+    });    
   }
 
   getRandomColor(): string {
@@ -209,17 +218,9 @@ export class DashboardPage {
     this.totalExpenses = 0;
     this.lastWeekSavings = 0;
   
-    const today = new Date();
-    const lastWeek = new Date();
-    lastWeek.setDate(today.getDate() - 7);
-  
     data.forEach((entry) => {
-      const entryDate = new Date(entry.fecha);
       if (entry.tipo) {
         this.totalSavings += entry.cantidad;
-        if (entryDate >= lastWeek) {
-          this.lastWeekSavings += entry.cantidad;
-        }
       } else {
         this.totalExpenses += entry.cantidad;
       }
@@ -228,7 +229,7 @@ export class DashboardPage {
     this.lastWeekSavings = this.totalSavings - this.totalExpenses;
     this.renderCharts();
   }
-
+  
   goToForm(type: string) {
     this.router.navigate(['/form'], { queryParams: { type } });
   }

@@ -12,17 +12,28 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NetworkInterceptor } from './interceptors/network.interceptor';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { MetaConsejoModalComponent } from './components/meta-consejo-modal/meta-consejo-modal.component';
+
 
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, HttpClientModule, IonicStorageModule.forRoot(), ServiceWorkerModule.register('ngsw-worker.js', {
-  enabled: !isDevMode(),
-  // Register the ServiceWorker as soon as the application is stable
-  // or after 30 seconds (whichever comes first).
-  registrationStrategy: 'registerWhenStable:30000'
-})],
-  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+  declarations: [
+    AppComponent,
+    MetaConsejoModalComponent // ✅ Lo dejas aquí
+  ],
+  imports: [
+    BrowserModule,
+    IonicModule.forRoot(),
+    AppRoutingModule,
+    HttpClientModule,
+    IonicStorageModule.forRoot(),
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    })
+  ],
+  providers: [
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: NetworkInterceptor,

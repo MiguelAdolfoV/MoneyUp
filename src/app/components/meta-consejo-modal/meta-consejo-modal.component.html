@@ -1,0 +1,23 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Consejo para tu meta</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrar()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>{{ meta.meta }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>{{ meta.consejo }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button expand="block" (click)="cerrar()">Cerrar</ion-button>
+</ion-content>
