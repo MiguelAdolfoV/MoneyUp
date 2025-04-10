@@ -1,17 +1,22 @@
 .ingreso {
-    color: var(--ion-color-success);
-  }
-  
-  .gasto {
-    color: var(--ion-color-danger);
-  }
-  
-  ion-card-title {
-    font-size: 1.1rem;
-    font-weight: bold;
-  }
-  
-  ion-label p {
-    margin: 0.2rem 0;
-  }
-  
+  color: var(--ion-color-success);
+}
+
+.gasto {
+  color: var(--ion-color-danger);
+}
+
+ion-card-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+ion-label p {
+  margin: 0.2rem 0;
+}
+.ingreso {
+  color: green;
+}
+.gasto {
+  color: red;
+}

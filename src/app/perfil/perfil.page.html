@@ -32,14 +32,61 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- 💸 Transacciones del usuario -->
+  <!-- 🎯 Filtros -->
   <ion-card *ngIf="transacciones.length > 0">
+    <ion-card-header>
+      <ion-card-title>Filtros</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <!-- Tipo -->
+        <ion-item>
+          <ion-label>Tipo</ion-label>
+          <ion-select [(ngModel)]="filtroSeleccionado" (ionChange)="aplicarFiltro()">
+            <ion-select-option value="all">Todos</ion-select-option>
+            <ion-select-option value="ingresos">Ingresos</ion-select-option>
+            <ion-select-option value="gastos">Gastos</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Orden -->
+        <ion-item>
+          <ion-label>Ordenar por monto</ion-label>
+          <ion-select [(ngModel)]="ordenMonto" (ionChange)="aplicarFiltro()">
+            <ion-select-option value="ninguno">Ninguno</ion-select-option>
+            <ion-select-option value="mayor">Mayor a menor</ion-select-option>
+            <ion-select-option value="menor">Menor a mayor</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Fecha -->
+        <ion-item>
+          <ion-label>Filtrar por fecha</ion-label>
+          <ion-button (click)="mostrarCalendario = !mostrarCalendario" size="small">
+            {{ mostrarCalendario ? 'Ocultar calendario' : 'Seleccionar fecha' }}
+          </ion-button>
+          <ion-button fill="clear" size="small" color="medium" (click)="limpiarFecha()">Limpiar</ion-button>
+        </ion-item>
+
+        <ion-item *ngIf="mostrarCalendario">
+          <ion-datetime
+            presentation="date"
+            [(ngModel)]="fechaSeleccionada"
+            (ionChange)="aplicarFiltro()"
+          ></ion-datetime>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- 💸 Transacciones del usuario -->
+  <ion-card *ngIf="filteredTransacciones.length > 0">
     <ion-card-header>
       <ion-card-title>Historial Financiero</ion-card-title>
     </ion-card-header>
     <ion-card-content>
       <ion-list>
-        <ion-item *ngFor="let t of transacciones">
+        <ion-item *ngFor="let t of filteredTransacciones">
           <ion-label>
             <p>
               <strong [ngClass]="t.tipo ? 'ingreso' : 'gasto'">
@@ -54,9 +101,9 @@
     </ion-card-content>
   </ion-card>
 
-  <ion-card *ngIf="transacciones.length === 0">
+  <ion-card *ngIf="filteredTransacciones.length === 0">
     <ion-card-content>
-      <p>No tienes transacciones registradas aún.</p>
+      <p>No se encontraron transacciones con los filtros aplicados.</p>
     </ion-card-content>
   </ion-card>
 
