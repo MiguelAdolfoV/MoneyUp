@@ -11,8 +11,7 @@
   </ion-toolbar>
 </ion-header>
 
-  <ion-content class="ion-padding">
-
+<ion-content class="ion-padding">
   <ion-refresher slot="fixed" (ionRefresh)="refreshData($event)">
     <ion-refresher-content
       pullingText="Desliza para actualizar"
@@ -21,8 +20,8 @@
     </ion-refresher-content>
   </ion-refresher>
 
-  <!-- Estadísticas principales -->
-  <div class="dashboard-grid">
+  <!-- Estadísticas principales - Contenedor actualizado -->
+  <div class="stats-grid">
     <ion-card class="stat-card">
       <ion-card-header>
         <ion-card-title>Ahorro total</ion-card-title>
@@ -51,6 +50,7 @@
     </ion-card>
   </div>
 
+  <!-- Resto del contenido se mantiene igual -->
   <!-- Consejos -->
   <ion-card *ngIf="showTips">
     <ion-card-header>
@@ -65,19 +65,46 @@
       <p>No hay consejos disponibles en este momento.</p>
     </ion-card-content>
   </ion-card>
-<!-- Gráficos -->
-<div class="charts-container">
-  <div class="chart-wrapper">
-    <canvas id="myPieChart"></canvas>
-  </div>
 
-  <div class="chart-wrapper">
-    <canvas id="myBarChart"></canvas>
+  <!-- Gráficos -->
+  <div class="charts-container">
+    <div class="chart-wrapper">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Distribución</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <canvas id="myPieChart"></canvas>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="chart-wrapper">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Ingresos vs Gastos</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <canvas id="myBarChart"></canvas>
+        </ion-card-content>
+      </ion-card>
+    </div>
+    
+    <!-- Gráfica de promedio de ahorro -->
+    <div class="chart-wrapper">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Promedio de Ahorro</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <canvas id="averageSavingsChart"></canvas>
+        </ion-card-content>
+      </ion-card>
+    </div>
   </div>
-</div>
 </ion-content>
 
-<!-- 🔻 Barra inferior personalizada con tu navegación -->
+<!-- Barra inferior de navegación -->
 <div class="dashboard-menu">
   <a class="link" (click)="goToForm('ingreso')">
     <span class="link-icon">
@@ -114,4 +141,3 @@
     <span class="link-title">Metas</span>
   </a>
 </div>
-

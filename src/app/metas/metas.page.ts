@@ -8,6 +8,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   templateUrl: './metas.page.html',
   styleUrls: ['./metas.page.scss'],
   standalone: false
+  
 })
 export class MetasPage {
   newMeta: string = '';
