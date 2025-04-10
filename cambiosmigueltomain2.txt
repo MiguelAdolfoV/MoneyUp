@@ -1,0 +1,667 @@
+diff --git a/src/app/app.component.html b/src/app/app.component.html
+index 13b9677..53b4b40 100644
+--- a/src/app/app.component.html
++++ b/src/app/app.component.html
+@@ -1,3 +1,13 @@
+ <ion-app>
++  <div
++    class="offline-floating"
++    *ngIf="!isOnline"
++    #draggableBanner
++    (mousedown)="startDrag($event, draggableBanner)"
++    (touchstart)="startDrag($event, draggableBanner)"
++  >
++    Fuera de línea
++  </div>
++
+   <ion-router-outlet></ion-router-outlet>
+ </ion-app>
+diff --git a/src/app/app.component.scss b/src/app/app.component.scss
+index e69de29..6da2174 100644
+--- a/src/app/app.component.scss
++++ b/src/app/app.component.scss
+@@ -0,0 +1,16 @@
++.offline-floating {
++    position: fixed;
++    top: 16px;
++    left: 16px;
++    background-color: #d32f2f;
++    color: white;
++    padding: 8px 12px;
++    font-size: 14px;
++    border-radius: 8px;
++    z-index: 9999;
++    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
++    cursor: move;
++    user-select: none;
++    transition: background-color 0.3s;
++  }
++  
+\ No newline at end of file
+diff --git a/src/app/app.component.ts b/src/app/app.component.ts
+index da2f9aa..b30e18f 100644
+--- a/src/app/app.component.ts
++++ b/src/app/app.component.ts
+@@ -1,11 +1,79 @@
+-import { Component } from '@angular/core';
++import { Component, Renderer2 } from '@angular/core';
++import { ToastController } from '@ionic/angular';
++
+ 
+ @Component({
+   selector: 'app-root',
+   templateUrl: 'app.component.html',
+   styleUrls: ['app.component.scss'],
+-  standalone: false,
++  standalone: false
+ })
+ export class AppComponent {
+-  constructor() {}
++  isOnline: boolean = navigator.onLine;
++
++  constructor(
++    private renderer: Renderer2,
++    private toastController: ToastController
++  ) {
++    this.monitorConnection();
++  }
++
++  monitorConnection() {
++    window.addEventListener('offline', () => {
++      this.isOnline = false;
++    });
++
++    window.addEventListener('online', async () => {
++      this.isOnline = true;
++      await this.showOnlineToast();
++    });
++  }
++
++  async showOnlineToast() {
++    const toast = await this.toastController.create({
++      message: '¡Conexión restaurada!',
++      duration: 2000,
++      color: 'success',
++      position: 'bottom',
++    });
++    await toast.present();
++  }
++  
++  startDrag(event: any, element: HTMLElement) {
++    event.preventDefault();
++  
++    const isTouch = event.type === 'touchstart';
++    const startX = isTouch ? event.touches[0].clientX : event.clientX;
++    const startY = isTouch ? event.touches[0].clientY : event.clientY;
++  
++    const rect = element.getBoundingClientRect();
++    const offsetX = startX - rect.left;
++    const offsetY = startY - rect.top;
++  
++    const move = (e: any) => {
++      const clientX = isTouch ? e.touches[0].clientX : e.clientX;
++      const clientY = isTouch ? e.touches[0].clientY : e.clientY;
++  
++      let x = clientX - offsetX;
++      let y = clientY - offsetY;
++  
++      const maxX = window.innerWidth - element.offsetWidth;
++      const maxY = window.innerHeight - element.offsetHeight;
++  
++      // 🧱 Limitar dentro de la pantalla
++      x = Math.max(0, Math.min(x, maxX));
++      y = Math.max(0, Math.min(y, maxY));
++  
++      this.renderer.setStyle(element, 'left', `${x}px`);
++      this.renderer.setStyle(element, 'top', `${y}px`);
++    };
++  
++    const stop = () => {
++      window.removeEventListener(isTouch ? 'touchmove' : 'mousemove', move);
++      window.removeEventListener(isTouch ? 'touchend' : 'mouseup', stop);
++    };
++  
++    window.addEventListener(isTouch ? 'touchmove' : 'mousemove', move);
++    window.addEventListener(isTouch ? 'touchend' : 'mouseup', stop);
++  }  
+ }
+diff --git a/src/app/app.module.ts b/src/app/app.module.ts
+index 1fd36d1..fee449d 100644
+--- a/src/app/app.module.ts
++++ b/src/app/app.module.ts
+@@ -9,11 +9,20 @@ import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
+ import { AppComponent } from './app.component';
+ import { AppRoutingModule } from './app-routing.module';
+ import { HttpClient, HttpClientModule } from '@angular/common/http';
++import { HTTP_INTERCEPTORS } from '@angular/common/http';
++import { NetworkInterceptor } from './interceptors/network.interceptor';
++
+ 
+ @NgModule({
+   declarations: [AppComponent],
+   imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, HttpClientModule, IonicStorageModule.forRoot()],
+-  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
++  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
++    {
++      provide: HTTP_INTERCEPTORS,
++      useClass: NetworkInterceptor,
++      multi: true,
++    },
++  ],
+   bootstrap: [AppComponent],
+ })
+ export class AppModule {}
+diff --git a/src/app/dashboard/dashboard.page.ts b/src/app/dashboard/dashboard.page.ts
+index 76cf49b..ff5aae9 100644
+--- a/src/app/dashboard/dashboard.page.ts
++++ b/src/app/dashboard/dashboard.page.ts
+@@ -49,56 +49,40 @@ export class DashboardPage {
+       event.target.complete();
+     }, 1500);
+   }
+-
++  
+   async loadData() {
+     const token = await this.authService.getToken();
+     const user = await this.authService.getUser();
+     const username = user?.username;
+-
++  
+     if (!token || !username) {
+       this.router.navigate(['/login']);
+       return;
+     }
+-
++  
+     const headers = new HttpHeaders({ 'x-access-token': token });
+-
+-    this.http.get<FinancialEntry[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/', { headers }).subscribe(
+-      data => {
+-        this.totalSavings = 0;
+-        this.totalExpenses = 0;
+-        this.lastWeekSavings = 0;
+-
+-        const today = new Date();
+-        const lastWeek = new Date();
+-        lastWeek.setDate(today.getDate() - 7);
+-
+-        // 🔎 Filtrar datos del usuario actual
+-        const filteredData = data.filter(entry => entry.usuario === username);
+-
+-        filteredData.forEach((entry) => {
+-          const entryDate = new Date(entry.fecha);
+-          if (entry.tipo) {
+-            this.totalSavings += entry.cantidad;
+-            if (entryDate >= lastWeek) {
+-              this.lastWeekSavings += entry.cantidad;
+-            }
+-          } else {
+-            this.totalExpenses += entry.cantidad;
++  
++    if (navigator.onLine) {
++      // ✅ Conectado: obtener desde API y guardar en Storage
++      this.http.get<FinancialEntry[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/', { headers }).subscribe(
++        async data => {
++          const filtered = data.filter(entry => entry.usuario === username);
++          await this.authService.saveIngresos(filtered);
++          this.processFinancialData(filtered);
++        },
++        error => {
++          if (error.status === 401) {
++            this.router.navigate(['/login']);
+           }
+-        });
+-
+-        this.lastWeekSavings = this.totalSavings - this.totalExpenses;
+-
+-        this.renderCharts();
+-      },
+-      error => {
+-        if (error.status === 401) {
+-          this.router.navigate(['/login']);
+         }
+-      }
+-    );
++      );
++    } else {
++      // ❌ Sin conexión: usar datos locales
++      const offlineData = await this.authService.getIngresos();
++      this.processFinancialData(offlineData);
++    }
+   }
+-
++  
+   async loadFinancialTips() {
+     const token = await this.authService.getToken();
+     const user = await this.authService.getUser();
+@@ -220,6 +204,31 @@ export class DashboardPage {
+     await alert.present();
+   }  
+ 
++  processFinancialData(data: FinancialEntry[]) {
++    this.totalSavings = 0;
++    this.totalExpenses = 0;
++    this.lastWeekSavings = 0;
++  
++    const today = new Date();
++    const lastWeek = new Date();
++    lastWeek.setDate(today.getDate() - 7);
++  
++    data.forEach((entry) => {
++      const entryDate = new Date(entry.fecha);
++      if (entry.tipo) {
++        this.totalSavings += entry.cantidad;
++        if (entryDate >= lastWeek) {
++          this.lastWeekSavings += entry.cantidad;
++        }
++      } else {
++        this.totalExpenses += entry.cantidad;
++      }
++    });
++  
++    this.lastWeekSavings = this.totalSavings - this.totalExpenses;
++    this.renderCharts();
++  }
++
+   goToForm(type: string) {
+     this.router.navigate(['/form'], { queryParams: { type } });
+   }
+diff --git a/src/app/form/form.page.ts b/src/app/form/form.page.ts
+index e211ade..714b917 100644
+--- a/src/app/form/form.page.ts
++++ b/src/app/form/form.page.ts
+@@ -59,9 +59,13 @@ export class FormPage implements OnInit {
+         await this.presentToast(`${this.type ? 'Ingreso' : 'Egreso'} registrado con éxito. 🎉`, 'success');
+         this.router.navigate(['/dashboard']);
+       },
+-      async (error) => {
+-        console.error('Error al registrar transacción', error);
+-        await this.presentToast('Error al registrar la transacción.', 'danger');
++      async error => {
++        console.error('Error inesperado:', error);
++        const customMessage = error?.error?.message;
++        if (customMessage) {
++          this.presentToast(customMessage);
++        } else {
++        }
+       }
+     );
+   }
+diff --git a/src/app/interceptors/network.interceptor.spec.ts b/src/app/interceptors/network.interceptor.spec.ts
+new file mode 100644
+index 0000000..1022217
+--- /dev/null
++++ b/src/app/interceptors/network.interceptor.spec.ts
+@@ -0,0 +1,44 @@
++import { TestBed } from '@angular/core/testing';
++import { HttpHandler, HttpRequest } from '@angular/common/http';
++import { ToastController } from '@ionic/angular';
++import { NetworkInterceptor } from './network.interceptor';
++
++describe('NetworkInterceptor', () => {
++  let interceptor: NetworkInterceptor;
++  let toastControllerSpy: jasmine.SpyObj<ToastController>;
++
++  beforeEach(() => {
++    toastControllerSpy = jasmine.createSpyObj('ToastController', ['create']);
++
++    TestBed.configureTestingModule({
++      providers: [
++        NetworkInterceptor,
++        { provide: ToastController, useValue: toastControllerSpy }
++      ]
++    });
++
++    interceptor = TestBed.inject(NetworkInterceptor);
++  });
++
++  it('should be created', () => {
++    expect(interceptor).toBeTruthy();
++  });
++
++  it('should block requests when offline (POST)', (done) => {
++    spyOnProperty(navigator, 'onLine').and.returnValue(false);
++
++    const req = new HttpRequest<any>('POST', '/api/test', {});
++    const next: HttpHandler = {
++      handle: () => {
++        throw new Error('This should not be called');
++      }
++    };
++
++    interceptor.intercept(req, next).subscribe({
++      error: (err) => {
++        expect(err).toBeTruthy();
++        done();
++      }
++    });
++  });
++});
+diff --git a/src/app/interceptors/network.interceptor.ts b/src/app/interceptors/network.interceptor.ts
+new file mode 100644
+index 0000000..684f31e
+--- /dev/null
++++ b/src/app/interceptors/network.interceptor.ts
+@@ -0,0 +1,32 @@
++import { Injectable } from '@angular/core';
++import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
++import { Observable, throwError } from 'rxjs';
++import { ToastController } from '@ionic/angular';
++
++@Injectable()
++export class NetworkInterceptor implements HttpInterceptor {
++  constructor(private toastController: ToastController) {}
++
++  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
++    if (!navigator.onLine) {
++      if (req.method === 'POST') {
++        this.showOfflineToast(); // ✅ Solo mostramos toast en POST
++      }
++
++      // ⛔️ Siempre bloqueamos si no hay conexión
++      return throwError(() => new Error('Sin conexión a internet'));
++    }
++
++    return next.handle(req);
++  }
++
++  async showOfflineToast() {
++    const toast = await this.toastController.create({
++      message: `Estas fuera de linea, algunas funciones no están disponibles.`,
++      duration: 3000,
++      color: 'warning',
++      position: 'bottom'
++    });
++    await toast.present();
++  }
++}
+diff --git a/src/app/login/login.page.html b/src/app/login/login.page.html
+index 2191918..76963df 100644
+--- a/src/app/login/login.page.html
++++ b/src/app/login/login.page.html
+@@ -14,7 +14,6 @@
+           <img src="assets/images/logo.png" alt="Logo" class="logo" />
+         </div>
+ 
+-        <!-- Correo -->
+         <ion-item lines="none">
+           <ion-label position="stacked">Correo electrónico</ion-label>
+           <ion-input
+@@ -22,10 +21,12 @@
+             [(ngModel)]="email"
+             name="email"
+             required
++            (ionInput)="onInputSanitize('email')"
++            (keydown)="preventSpace($event)"
+           ></ion-input>
+         </ion-item>
+-
+-        <!-- Contraseña con toggle -->
++        
++        <!-- Contraseña -->
+         <ion-item class="input-password">
+           <ion-label position="stacked">Contraseña</ion-label>
+           <ion-input
+@@ -33,9 +34,10 @@
+             [(ngModel)]="password"
+             name="password"
+             required
++            (ionInput)="onInputSanitize('password')"
++            (keydown)="preventSpace($event)"
+           ></ion-input>
+         
+-          <!-- Ícono flotante (no empuja el input) -->
+           <ion-icon
+             [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+             class="toggle-eye-icon"
+diff --git a/src/app/login/login.page.ts b/src/app/login/login.page.ts
+index 03f4352..2436919 100644
+--- a/src/app/login/login.page.ts
++++ b/src/app/login/login.page.ts
+@@ -54,10 +54,8 @@ export class LoginPage {
+           const user = response.user;
+ 
+           if (token && user) {
+-            // ✅ Guardar sesión usando Ionic Storage
+             await this.authService.saveSession(token, user);
+ 
+-            // 👁️ Eliminar foco del botón
+             (document.activeElement as HTMLElement)?.blur();
+ 
+             this.router.navigate(['/dashboard']);
+@@ -76,12 +74,29 @@ export class LoginPage {
+           } else if (error.status === 401) {
+             this.presentToast('Credenciales incorrectas, por favor intenta de nuevo.');
+           } else {
+-            this.presentToast('Hubo un error con el servidor. Intenta más tarde.');
+           }
+         }
+       );
+     });
+   }
++  
++    // Eliminar espacios al escribir o pegar texto
++  onInputSanitize(field: 'email' | 'password') {
++    if (field === 'email') {
++      this.email = this.email.replace(/\s/g, '');
++    } else if (field === 'password') {
++      this.password = this.password.replace(/\s/g, '');
++    }
++  }
++
++  // Prevenir escribir espacios desde el teclado
++  preventSpace(event: KeyboardEvent) {
++    if (event.key === ' ') {
++      event.preventDefault();
++      this.presentToast('No se permiten espacios en este campo.');
++    }
++  }
++
+ 
+   async presentToast(message: string) {
+     const toast = await this.toastController.create({
+@@ -103,4 +118,4 @@ export class LoginPage {
+   goToRegister() {
+     this.router.navigate(['/register']);
+   }
+-}
++}
+\ No newline at end of file
+diff --git a/src/app/metas/metas.page.ts b/src/app/metas/metas.page.ts
+index 32efc3e..29bca2f 100644
+--- a/src/app/metas/metas.page.ts
++++ b/src/app/metas/metas.page.ts
+@@ -99,11 +99,14 @@ export class MetasPage {
+         this.presentToast('Meta registrada correctamente');
+         await this.loadRemoteMetas(); // 🔄 Recargar metas
+       },
+-      (error) => {
+-        console.error(error);
+-        this.presentToast('Error al guardar la meta', 'danger');
+-      }
+-    );
++      async error => {
++        console.error('Error al guardar la meta', error);
++        const customMessage = error?.error?.message;
++        if (customMessage) {
++          this.presentToast(customMessage);
++        } else {
++        }
++      }   );
+   }
+ 
+   async loadRemoteMetas() {
+diff --git a/src/app/perfil/perfil.page.ts b/src/app/perfil/perfil.page.ts
+index 2732918..9389002 100644
+--- a/src/app/perfil/perfil.page.ts
++++ b/src/app/perfil/perfil.page.ts
+@@ -1,6 +1,5 @@
+ import { Component, OnInit } from '@angular/core';
+ import { AuthService } from '../services/auth.service';
+-import { HttpClient, HttpHeaders } from '@angular/common/http';
+ 
+ @Component({
+   selector: 'app-perfil',
+@@ -12,34 +11,20 @@ export class PerfilPage implements OnInit {
+   userData: any = null;
+   transacciones: any[] = [];
+ 
+-  constructor(
+-    private authService: AuthService,
+-    private http: HttpClient
+-  ) {}
++  constructor(private authService: AuthService) {}
+ 
+   async ngOnInit() {
+     this.userData = await this.authService.getUser();
+     if (this.userData) {
+-      this.loadTransacciones();
++      this.loadTransaccionesDesdeStorage();
+     }
+   }
+ 
+-  async loadTransacciones() {
+-    const token = await this.authService.getToken();
++  async loadTransaccionesDesdeStorage() {
+     const username = this.userData.username;
++    const ingresosGuardados = await this.authService.getIngresos();
+ 
+-    const headers = new HttpHeaders({
+-      'x-access-token': token || ''
+-    });
+-
+-    this.http.get<any[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/', { headers }).subscribe(
+-      (response) => {
+-        // Filtrar por nombre de usuario
+-        this.transacciones = response.filter(t => t.usuario === username);
+-      },
+-      (error) => {
+-        console.error('Error al obtener transacciones', error);
+-      }
+-    );
++    // Filtrar por usuario actual
++    this.transacciones = ingresosGuardados.filter(t => t.usuario === username);
+   }
+ }
+diff --git a/src/app/register/register.page.html b/src/app/register/register.page.html
+index 5ef5291..e4622ae 100644
+--- a/src/app/register/register.page.html
++++ b/src/app/register/register.page.html
+@@ -8,33 +8,39 @@
+   <ion-card>
+     <ion-card-content>
+       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+-
+         <!-- Nombre de usuario -->
+         <ion-item lines="none" [class.invalid]="username?.invalid && (username?.dirty || username?.touched)">
+           <ion-label position="stacked">Nombre de usuario</ion-label>
+-          <ion-input formControlName="username" type="text" required></ion-input>
++          <ion-input
++            formControlName="username"
++            type="text"
++            required
++            (ionInput)="onInputSanitize('username')"
++            (keydown)="preventSpace($event)"
++          ></ion-input>
+         </ion-item>
+-        <ion-text color="danger" *ngIf="username?.invalid && (username?.dirty || username?.touched)">
+-          <small *ngIf="username?.hasError('required')">El nombre de usuario es requerido.</small>
+-        </ion-text>
+ 
+         <!-- Correo electrónico -->
+         <ion-item lines="none" [class.invalid]="email?.invalid && (email?.dirty || email?.touched)">
+           <ion-label position="stacked">Correo electrónico</ion-label>
+-          <ion-input formControlName="email" type="email" required></ion-input>
++          <ion-input
++            formControlName="email"
++            type="email"
++            required
++            (ionInput)="onInputSanitize('email')"
++            (keydown)="preventSpace($event)"
++          ></ion-input>
+         </ion-item>
+-        <ion-text color="danger" *ngIf="email?.invalid && (email?.dirty || email?.touched)">
+-          <small *ngIf="email?.hasError('required')">El email es requerido.</small>
+-          <small *ngIf="email?.hasError('email')">El email debe ser válido.</small>
+-        </ion-text>
+ 
+-                <!-- Contraseña con toggle -->
++        <!-- Contraseña -->
+         <ion-item lines="none" class="input-password" [class.invalid]="password?.invalid && (password?.dirty || password?.touched)">
+           <ion-label position="stacked">Contraseña</ion-label>
+           <ion-input
+             [type]="showPassword ? 'text' : 'password'"
+             formControlName="password"
+             required
++            (ionInput)="onInputSanitize('password')"
++            (keydown)="preventSpace($event)"
+           ></ion-input>
+           <ion-icon
+             [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+diff --git a/src/app/register/register.page.ts b/src/app/register/register.page.ts
+index 4a3168d..8ad59f2 100644
+--- a/src/app/register/register.page.ts
++++ b/src/app/register/register.page.ts
+@@ -72,9 +72,11 @@ export class RegisterPage implements OnInit {
+         async error => {
+           await loading.dismiss();
+           console.error('Error en el registro', error);
+-          
+-          const errorMessage = error?.error?.message || 'Error inesperado. Intenta de nuevo.';
+-          await this.presentToast(errorMessage);
++          const customMessage = error?.error?.message;
++          if (customMessage) {
++            this.presentToast(customMessage);
++          } else {
++          }
+         }
+       );
+     } else {
+@@ -114,6 +116,20 @@ export class RegisterPage implements OnInit {
+     }
+   }
+ 
++  onInputSanitize(field: 'username' | 'email' | 'password') {
++    const value = this.registerForm.get(field)?.value || '';
++    const sanitized = value.replace(/\s/g, '');
++    this.registerForm.get(field)?.setValue(sanitized, { emitEvent: false });
++  }
++  
++  preventSpace(event: KeyboardEvent) {
++    if (event.key === ' ') {
++      event.preventDefault();
++      this.presentToast('No se permiten espacios en este campo.');
++    }
++  }
++  
++
+   get username() {
+     return this.registerForm.get('username');
+   }
+diff --git a/src/app/services/auth.service.ts b/src/app/services/auth.service.ts
+index 4eede58..8e88d9c 100644
+--- a/src/app/services/auth.service.ts
++++ b/src/app/services/auth.service.ts
+@@ -65,10 +65,20 @@ async getMetas(): Promise<string[]> {
+   return stored || [];
+ }
+ 
+-// 👤 Método para registrar usuarios
++// 👤 Registrar usuarios
+ register(username: string, email: string, password: string, roles: string[]): Observable<any> {
+   const body = { username, email, password, roles };
+   return this.http.post(`${this.API_URL}/signup`, body);
+ }
+ 
++// 🔍 Guardar ingresos
++async saveIngresos(data: any[]): Promise<void> {
++  await this._storage?.set('ingresos', data);
++}
++
++// 🔍 Mostrar ingresos
++async getIngresos(): Promise<any[]> {
++  return (await this._storage?.get('ingresos')) || [];
++}
++
+ }
+\ No newline at end of file

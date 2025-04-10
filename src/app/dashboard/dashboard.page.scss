@@ -117,6 +117,7 @@
   }
 }
 
+/* Contenedor de gráficos */
 .charts-container {
   display: flex;
   flex-direction: column;
@@ -135,12 +136,12 @@
   border-radius: var(--app-radius);
   box-shadow: var(--app-box-shadow);
   margin: 0 auto;
-}
 
-canvas {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 500px;
-  max-height: 300px;
-  margin: 0 auto;
+  canvas {
+    width: 100% !important;
+    height: 250px !important; // Altura controlada
+    max-width: 500px;
+    max-height: 300px;
+    margin: 0 auto;
+  }
 }

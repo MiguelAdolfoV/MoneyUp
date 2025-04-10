@@ -52,19 +52,19 @@ export class DashboardPage {
       event.target.complete();
     }, 1500);
   }
-  
+
   async loadData() {
     const token = await this.authService.getToken();
     const user = await this.authService.getUser();
     const username = user?.username;
-  
+
     if (!token || !username) {
       this.router.navigate(['/login']);
       return;
     }
-  
+
     const headers = new HttpHeaders({ 'x-access-token': token });
-  
+
     if (navigator.onLine) {
       this.http.get<FinancialEntry[]>('https://rest-api-sigma-five.vercel.app/api/ingreso/', { headers }).subscribe(
         async data => {
@@ -83,7 +83,7 @@ export class DashboardPage {
       this.processFinancialData(offlineData);
     }
   }
-  
+
   async loadFinancialTips() {
     const token = await this.authService.getToken();
     const user = await this.authService.getUser();
@@ -127,7 +127,7 @@ export class DashboardPage {
     const avgSavingsCtx = document.getElementById('averageSavingsChart') as HTMLCanvasElement;
 
     if (this.hasData) {
-      // Gráfico de pastel
+      // Pie Chart
       this.pieChart = new Chart(pieCtx, {
         type: 'pie',
         data: {
@@ -144,18 +144,27 @@ export class DashboardPage {
         }
       });
 
-      // Gráfico de barras
+      // Bar Chart separado (miguel)
       this.barChart = new Chart(barCtx, {
         type: 'bar',
         data: {
-          labels: ['Ingresos', 'Gastos'],
-          datasets: [{
-            label: 'Total',
-            data: [this.totalSavings, this.totalExpenses],
-            backgroundColor: ['#4CAF50', '#F44336'],
-            borderColor: ['#388E3C', '#D32F2F'],
-            borderWidth: 1
-          }]
+          labels: ['Ingresos', 'Egresos'],
+          datasets: [
+            {
+              label: 'Ingresos',
+              data: [this.totalSavings, 0],
+              backgroundColor: this.getRandomColor(),
+              borderWidth: 1,
+              barThickness: 200
+            },
+            {
+              label: 'Egresos',
+              data: [0, this.totalExpenses],
+              backgroundColor: this.getRandomColor(),
+              borderWidth: 1,
+              barThickness: 200
+            }
+          ]
         },
         options: {
           responsive: true,
@@ -168,7 +177,7 @@ export class DashboardPage {
         }
       });
 
-      // Gráfica de promedio de ahorro
+      // Línea de promedios mensuales
       this.renderAverageSavingsChart(avgSavingsCtx);
     }
   }
@@ -176,7 +185,7 @@ export class DashboardPage {
   renderAverageSavingsChart(ctx: HTMLCanvasElement) {
     if (this.totalSavings > 0 || this.totalExpenses > 0) {
       this.calculateMonthlyAverages();
-      
+
       this.averageSavingsChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -218,7 +227,7 @@ export class DashboardPage {
     if (this.totalSavings > 0 || this.totalExpenses > 0) {
       const currentMonth = new Date().getMonth();
       this.monthsLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      
+
       const baseValue = (this.totalSavings - this.totalExpenses) / (currentMonth + 1);
       this.monthlyAverages = this.monthsLabels.map((_, index) => {
         return index <= currentMonth ? Math.max(0, baseValue * (0.9 + Math.random() * 0.2)) : 0;
@@ -230,15 +239,39 @@ export class DashboardPage {
   }
 
   destroyCharts() {
-    if (this.pieChart) {
-      this.pieChart.destroy();
-    }
-    if (this.barChart) {
-      this.barChart.destroy();
-    }
-    if (this.averageSavingsChart) {
-      this.averageSavingsChart.destroy();
-    }
+    if (this.pieChart) this.pieChart.destroy();
+    if (this.barChart) this.barChart.destroy();
+    if (this.averageSavingsChart) this.averageSavingsChart.destroy();
+  }
+
+  processFinancialData(data: FinancialEntry[]) {
+    this.totalSavings = 0;
+    this.totalExpenses = 0;
+    this.lastWeekSavings = 0;
+    this.hasData = data && data.length > 0;
+
+    data.forEach((entry) => {
+      if (entry.tipo) {
+        this.totalSavings += entry.cantidad;
+      } else {
+        this.totalExpenses += entry.cantidad;
+      }
+    });
+
+    this.lastWeekSavings = this.totalSavings - this.totalExpenses;
+    this.renderCharts();
+  }
+
+  goToForm(type: string) {
+    this.router.navigate(['/form'], { queryParams: { type } });
+  }
+
+  goToProfile() {
+    this.router.navigate(['/perfil']);
+  }
+
+  goToMetas() {
+    this.router.navigate(['/metas']);
   }
 
   getRandomColor(): string {
@@ -272,45 +305,7 @@ export class DashboardPage {
         }
       ]
     });
-  
+
     await alert.present();
-  }
-
-  processFinancialData(data: FinancialEntry[]) {
-    this.totalSavings = 0;
-    this.totalExpenses = 0;
-    this.lastWeekSavings = 0;
-    this.hasData = data && data.length > 0;
-
-    const today = new Date();
-    const lastWeek = new Date();
-    lastWeek.setDate(today.getDate() - 7);
-  
-    data.forEach((entry) => {
-      const entryDate = new Date(entry.fecha);
-      if (entry.tipo) {
-        this.totalSavings += entry.cantidad;
-        if (entryDate >= lastWeek) {
-          this.lastWeekSavings += entry.cantidad;
-        }
-      } else {
-        this.totalExpenses += entry.cantidad;
-      }
-    });
-  
-    this.lastWeekSavings = this.totalSavings - this.totalExpenses;
-    this.renderCharts();
-  }
-
-  goToForm(type: string) {
-    this.router.navigate(['/form'], { queryParams: { type } });
-  }
-
-  goToProfile() {
-    this.router.navigate(['/perfil']);
-  }
-
-  goToMetas() {
-    this.router.navigate(['/metas']);
   }
 }
