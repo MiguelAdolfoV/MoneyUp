@@ -9,6 +9,7 @@ import { MetaConsejoModalComponent } from '../components/meta-consejo-modal/meta
   templateUrl: './metas.page.html',
   styleUrls: ['./metas.page.scss'],
   standalone: false
+  
 })
 export class MetasPage {
   newMeta: string = '';
