@@ -33,6 +33,15 @@ export class FormPage implements OnInit {
     });
   }
 
+  // Detecta cambios y ajusta signo automáticamente
+  onAmountChange() {
+    if (!this.type && this.amount > 0) {
+      this.amount = -Math.abs(this.amount); // egresos → negativo
+    } else if (this.type && this.amount < 0) {
+      this.amount = Math.abs(this.amount); // ingresos → positivo
+    }
+  }
+
   async onSubmit() {
     const token = await this.authService.getToken();
     const user = await this.authService.getUser();
@@ -41,6 +50,12 @@ export class FormPage implements OnInit {
     if (!token || !username) {
       this.presentToast('Sesión no válida. Redirigiendo...', 'danger');
       this.router.navigate(['/login']);
+      return;
+    }
+
+    // Validación solo para ingresos
+    if (this.type && this.amount <= 0) {
+      this.presentToast('El monto del ingreso debe ser mayor a 0', 'warning');
       return;
     }
 
@@ -64,7 +79,6 @@ export class FormPage implements OnInit {
         const customMessage = error?.error?.message;
         if (customMessage) {
           this.presentToast(customMessage);
-        } else {
         }
       }
     );
