@@ -36,7 +36,9 @@
                   [(ngModel)]="amount"
                   name="amount"
                   type="number"
+                  min="1"
                   required
+                  (ionChange)="onAmountChange()"
                 ></ion-input>
               </ion-item>
 
